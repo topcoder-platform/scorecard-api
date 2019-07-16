@@ -48,6 +48,8 @@ async function list(criteria) {
     };
   }
 
+  logger.debug(`list the scorecard with ${JSON.stringify(criteria)}`);
+
   const records = await helper.scan(config.AMAZON.DYNAMODB_SCORECARD_TABLE, options);
   logger.debug(`received records = ${records}`);
   // populate score system names

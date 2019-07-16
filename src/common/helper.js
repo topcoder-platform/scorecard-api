@@ -35,6 +35,7 @@ function autoWrapExpress(obj) {
   logger.debug('===');
   logger.debug(obj);
   logger.debug('===');
+
   if (_.isArray(obj)) {
     return obj.map(autoWrapExpress);
   }
