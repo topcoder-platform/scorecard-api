@@ -47,6 +47,7 @@ async function list(criteria) {
       name: { contains: criteria.name }
     };
   }
+
   const records = await helper.scan(config.AMAZON.DYNAMODB_SCORECARD_TABLE, options);
   // populate score system names
   for (let i = 0; i < records.length; i += 1) {

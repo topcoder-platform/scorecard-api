@@ -19,7 +19,7 @@ async function checkHealth(req, res) {
   checksRun += 1;
   const timestampMS = new Date().getTime();
   try {
-    await service.list();
+    await service.list({ name: 'default_scorecard' });
   } catch (e) {
     throw new errors.ServiceUnavailableError(`There is database operation error, ${e.message}`);
   }
