@@ -6,6 +6,7 @@ const config = require('config');
 const AWS = require('aws-sdk');
 const models = require('../models');
 const errors = require('./errors');
+const logger = require('./logger');
 
 // AWS DynamoDB instance
 let dbInstance;
@@ -31,6 +32,9 @@ function wrapExpress(fn) {
  * @returns {Object|Array} the wrapped object
  */
 function autoWrapExpress(obj) {
+  logger.debug('===');
+  logger.debug(obj);
+  logger.debug('===');
   if (_.isArray(obj)) {
     return obj.map(autoWrapExpress);
   }
@@ -183,11 +187,15 @@ async function remove(dbItem) {
  * @returns {Array} found records
  */
 async function scan(modelName, scanParams) {
+  logger.debug(`scan for ${JSON.stringify(scanParams)} in table ${modelName}`);
+
   return new Promise((resolve, reject) => {
     models[modelName].scan(scanParams).exec((err, result) => {
       if (err) {
+        logger.error(err);
         reject(err);
       } else {
+        logger.debug(`result = ${result}`);
         resolve(result.count === 0 ? [] : result);
       }
     });
