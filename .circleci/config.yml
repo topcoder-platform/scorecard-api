@@ -47,6 +47,7 @@ jobs:
   "build-dev":
     <<: *defaults
     environment:
+      DEPLOY_ENV: "DEV"
       APP_ENV: "dev"      
     steps: *builddeploy_steps
 
@@ -54,6 +55,7 @@ jobs:
   "build-prod":
     <<: *defaults
     environment:
+      DEPLOY_ENV: "PROD"
       APP_ENV: "prod"
     steps: *builddeploy_steps
 
