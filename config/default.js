@@ -23,5 +23,7 @@ module.exports = {
     // table name is model name
     DYNAMODB_SCORE_SYSTEM_TABLE: process.env.DYNAMODB_SCORE_SYSTEM_TABLE || 'score_systems',
     DYNAMODB_SCORECARD_TABLE: process.env.DYNAMODB_SCORECARD_TABLE || 'scorecards'
-  }
+  },
+
+  HEALTH_CHECK_TIMEOUT: process.env.HEALTH_CHECK_TIMEOUT || 3000
 };

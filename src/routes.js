@@ -4,7 +4,7 @@
  * If scopes are not configured for a route, then any scope is allowed.
  */
 
-const constants = require('../app-constants')
+const constants = require('../app-constants');
 
 module.exports = {
   '/scoreSystems': {
@@ -127,5 +127,11 @@ module.exports = {
       access: [constants.UserRoles.Admin],
       scopes: [constants.Scopes.UpdateScorecard, constants.Scopes.AllScorecard]
     }
+  },
+  '/health': {
+    get: {
+      controller: 'HealthController',
+      method: 'checkHealth'
+    }
   }
-}
+};
