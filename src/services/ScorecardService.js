@@ -51,7 +51,7 @@ async function list(criteria) {
   logger.debug(`list the scorecard with ${JSON.stringify(criteria)}`);
 
   const records = await helper.scan(config.AMAZON.DYNAMODB_SCORECARD_TABLE, options);
-  logger.debug(`received records = ${records}`);
+  logger.debug(`received records = ${JSON.stringify(records)}`);
   // populate score system names
   for (let i = 0; i < records.length; i += 1) {
     await populateScoreSystemNames(records[i]);
@@ -116,6 +116,8 @@ async function validateScorecardDetails(details) {
  * @returns {Object} the created scorecard
  */
 async function create(authUser, data) {
+  logger.debug(`create scorecard with ${JSON.stringify(data)} by ${authUser}`);
+
   await validateScorecardDetails(data.scorecardDetails);
 
   data.id = uuid();

@@ -32,10 +32,6 @@ function wrapExpress(fn) {
  * @returns {Object|Array} the wrapped object
  */
 function autoWrapExpress(obj) {
-  logger.debug('===');
-  logger.debug(obj);
-  logger.debug('===');
-
   if (_.isArray(obj)) {
     return obj.map(autoWrapExpress);
   }
@@ -58,7 +54,7 @@ function autoWrapExpress(obj) {
 function getDb() {
   // cache it for better performance
   if (!dbInstance) {
-    dbInstance = new AWS.DynamoDB();
+    dbInstance = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
   }
   return dbInstance;
 }
@@ -193,10 +189,8 @@ async function scan(modelName, scanParams) {
   return new Promise((resolve, reject) => {
     models[modelName].scan(scanParams).exec((err, result) => {
       if (err) {
-        logger.error(err);
         reject(err);
       } else {
-        logger.debug(`result = ${result}`);
         resolve(result.count === 0 ? [] : result);
       }
     });
