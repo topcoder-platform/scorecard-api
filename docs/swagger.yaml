@@ -1,0 +1,735 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: TopCoder Scorecard API v5
+  description: >
+    ## Access levels
+
+    - Admin can call any API, Non-admin can call only retrieval APIs
+
+    - M2M token with scope 'read:scoreSystem' can call retrieval score system APIs
+
+    - M2M token with scope 'update:scoreSystem' can call mutating score system APIs
+
+    - M2M token with scope 'all:scoreSystem' can call any score system API
+
+    - M2M token with scope 'read:scorecard' can call retrieval scorecard APIs
+
+    - M2M token with scope 'update:scorecard' can call mutating scorecard APIs
+
+    - M2M token with scope 'all:scorecard' can call any scorecard API
+
+host: api.topcoder.com
+basePath: /v5
+schemes:
+  - http
+  - https
+securityDefinitions:
+  bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+produces:
+  - application/json
+consumes:
+  - application/json
+security:
+  - bearer: []
+paths:
+  '/scoreSystems':
+    get:
+      tags:
+        - Score System
+      description: |
+        List score systems.
+      parameters:
+        - name: name
+          in: query
+          description: Filter by name, partial string match is used, case insensitive
+          required: false
+          type: string
+        - name: phase
+          in: query
+          description: Filter by phase, partial string match is used, case insensitive
+          required: false
+          type: string
+        - name: topic
+          in: query
+          description: Filter by topic, partial string match is used, case insensitive
+          required: false
+          type: string
+        - name: isActive
+          in: query
+          description: Filter by isActive flag
+          required: false
+          type: boolean
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ScoreSystem'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Score System
+      description: |
+        List score systems head.
+      parameters:
+        - name: name
+          in: query
+          description: Filter by name, partial string match is used, case insensitive
+          required: false
+          type: string
+        - name: phase
+          in: query
+          description: Filter by phase, partial string match is used, case insensitive
+          required: false
+          type: string
+        - name: topic
+          in: query
+          description: Filter by topic, partial string match is used, case insensitive
+          required: false
+          type: string
+        - name: isActive
+          in: query
+          description: Filter by isActive flag
+          required: false
+          type: boolean
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    post:
+      tags:
+        - Score System
+      description: |
+        Create a new score system.
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/ScoreSystemData'
+      responses:
+        '201':
+          description: Created - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/ScoreSystem'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/scoreSystems/:id':
+    get:
+      tags:
+        - Score System
+      description: Retrieve the score system by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of score system to retrieve
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ScoreSystem'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Score System
+      description: Retrieve the score system head by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of score system to retrieve
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    put:
+      tags:
+        - Score System
+      description: Update the score system with the specified id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of score system to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/ScoreSystemData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/ScoreSystem'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    patch:
+      tags:
+        - Score System
+      description: >
+        Partially update the score system with specified id.  Only the fields
+        that are provided will be updated.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of score system to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/ScoreSystemData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/ScoreSystem'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    delete:
+      tags:
+        - Score System
+      description: Delete score system.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of score system to delete
+      responses:
+        '204':
+          description: Deleted successful.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/scorecards':
+    get:
+      tags:
+        - Scorecard
+      description: |
+        List scorecards.
+      parameters:
+        - name: name
+          in: query
+          description: Filter by name, partial string match is used, case sensitive
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Scorecard'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Scorecard
+      description: |
+        List scorecards head.
+      parameters:
+        - name: name
+          in: query
+          description: Filter by name, partial string match is used, case sensitive
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    post:
+      tags:
+        - Scorecard
+      description: |
+        Create a new scorecard.
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/ScorecardData'
+      responses:
+        '201':
+          description: Created - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/Scorecard'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/scorecards/:id':
+    get:
+      tags:
+        - Scorecard
+      description: Retrieve the scorecard by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of scorecard to retrieve
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Scorecard'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Scorecard
+      description: Retrieve the scorecard head by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of scorecard to retrieve
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    put:
+      tags:
+        - Scorecard
+      description: Update the scorecard with the specified id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of scorecard to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/ScorecardData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/Scorecard'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    patch:
+      tags:
+        - Scorecard
+      description: >
+        Partially update the scorecard with specified id.  Only the fields
+        that are provided will be updated.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of scorecard to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/ScorecardData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/Scorecard'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    delete:
+      tags:
+        - Scorecard
+      description: Delete scorecard.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of scorecard to delete
+      responses:
+        '204':
+          description: Deleted successful.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: entity not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+
+definitions:
+  AuditEntity:
+    type: object
+    properties:
+      id:
+        type: string
+        format: UUID
+      createdBy:
+        type: string
+      updatedBy:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+    required:
+      - id
+      - createdBy
+      - createdAt
+  ScoreSystemData:
+    type: object
+    properties:
+      name:
+        type: string
+      phase:
+        type: string
+      topic:
+        type: string
+      isActive:
+        type: boolean
+        default: false
+  ScoreSystem:
+    type: object
+    allOf:
+      - $ref: '#/definitions/AuditEntity'
+      - $ref: '#/definitions/ScoreSystemData'
+    required:
+      - id
+      - name
+      - phase
+      - topic
+      - isActive
+      - createdBy
+      - createdAt
+  ScorecardData:
+    type: object
+    properties:
+      name:
+        type: string
+      scorecardDetails:
+        type: array
+        items:
+          type: object
+          properties:
+            scoreSystemId:
+              type: string
+              format: UUID
+            scoreSystemName:
+              type: string
+            weight:
+              type: number
+          required:
+            - scoreSystemId
+            - weight
+  Scorecard:
+    type: object
+    allOf:
+      - $ref: '#/definitions/AuditEntity'
+      - $ref: '#/definitions/ScorecardData'
+    required:
+      - id
+      - name
+      - createdBy
+      - createdAt
+  ErrorModel:
+    type: object
+    properties:
+      message:
+        type: string
+        description: the error message

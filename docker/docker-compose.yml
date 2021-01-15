@@ -1,0 +1,9 @@
+version: '3'
+services:
+  scorecard-api:
+    image: scorecard-api:latest
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    network_mode: "host"
+
