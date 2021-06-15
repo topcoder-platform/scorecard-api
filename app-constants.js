@@ -6,9 +6,9 @@ const UserRoles = {
 }
 
 const Scopes = {
-  ReadScoreSystem: 'read:scoreSystem',
-  UpdateScoreSystem: 'update:scoreSystem',
-  AllScoreSystem: 'all:scoreSystem',
+  ReadScoreSystem: 'read:score_system',
+  UpdateScoreSystem: 'update:score_system',
+  AllScoreSystem: 'all:score_system',
   ReadScorecard: 'read:scorecard',
   UpdateScorecard: 'update:scorecard',
   AllScorecard: 'all:scorecard'

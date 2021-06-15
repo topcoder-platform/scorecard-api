@@ -7,11 +7,11 @@ info:
 
     - Admin can call any API, Non-admin can call only retrieval APIs
 
-    - M2M token with scope 'read:scoreSystem' can call retrieval score system APIs
+    - M2M token with scope 'read:score_system' can call retrieval score system APIs
 
-    - M2M token with scope 'update:scoreSystem' can call mutating score system APIs
+    - M2M token with scope 'update:score_system' can call mutating score system APIs
 
-    - M2M token with scope 'all:scoreSystem' can call any score system API
+    - M2M token with scope 'all:score_system' can call any score system API
 
     - M2M token with scope 'read:scorecard' can call retrieval scorecard APIs
 
