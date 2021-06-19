@@ -80,6 +80,30 @@ describe('Unit tests for scorecard service', () => {
       should.equal(result.length, 0)
     })
 
+    it('list scorecards successfully 4', async () => {
+      const result = await service.list({
+        page: 1, // ignored
+        perPage: 10, // ignored
+        legacyScorecardId: 30004192
+      })
+      should.equal(result.length, 1)
+      should.exist(result[0].id)
+      should.equal(result[0].name, 'scorecard3')
+      should.equal(result[0].legacyScorecardId, 30004192)
+      should.equal(result[0].createdBy, 'test')
+      should.exist(result[0].createdAt)
+      const details = result[0].scorecardDetails || []
+      should.equal(details.length, 0)
+    })
+
+    it('list scorecards successfully 5', async () => {
+      const result = await service.list({
+        page: null, // ignored
+        legacyScorecardId: 30004172
+      })
+      should.equal(result.length, 0)
+    })
+
     it('list scorecards - invalid name', async () => {
       try {
         await service.list({ name: ['invalid'] })

@@ -98,6 +98,32 @@ describe('E2E tests for scorecards APIs', () => {
       should.equal(result.length, 0)
     })
 
+    it('list scorecards API - success 4', async () => {
+      const response = await chai.request(app)
+        .get(basePath)
+        .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
+        .query({
+          page: null, // ignored
+          legacyScorecardId: 30004192
+        })
+      should.equal(response.status, 200)
+      const result = response.body
+      should.equal(result.length, 1)
+    })
+
+    it('list scorecards API - success 5', async () => {
+      const response = await chai.request(app)
+        .get(basePath)
+        .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
+        .query({
+          page: null, // ignored
+          legacyScorecardId: 30004172
+        })
+      should.equal(response.status, 200)
+      const result = response.body
+      should.equal(result.length, 0)
+    })
+
     it('list scorecards API - missing token', async () => {
       const response = await chai.request(app)
         .get(basePath)

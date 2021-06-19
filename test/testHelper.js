@@ -66,6 +66,7 @@ async function insertTestData () {
       scoreSystemId: scoreSystemId1,
       weight: 80
     }],
+    legacyScorecardId: 30004127,
     createdBy: 'test'
   })
   await helper.create(config.AMAZON.DYNAMODB_SCORECARD_TABLE, {
@@ -75,11 +76,13 @@ async function insertTestData () {
       scoreSystemId: uuid(), // it has no corresponding score system in db
       weight: 20
     }],
+    legacyScorecardId: 30004131,
     createdBy: 'test'
   })
   await helper.create(config.AMAZON.DYNAMODB_SCORECARD_TABLE, {
     id: uuid(),
     name: 'scorecard3',
+    legacyScorecardId: 30004192,
     createdBy: 'test'
   })
 }
