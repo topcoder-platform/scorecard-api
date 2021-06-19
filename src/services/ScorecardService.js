@@ -41,11 +41,12 @@ async function populateScoreSystemNames(scorecard) {
  * @returns {Array} the search result
  */
 async function list(criteria) {
-  let options;
+  let options = {};
   if (criteria.name) {
-    options = {
-      name: { contains: criteria.name }
-    };
+    options.name = { contains: criteria.name }
+  }
+  if (criteria.legacyScorecardId) {
+    options.legacyScorecardId = { eq: criteria.legacyScorecardId }
   }
 
   logger.debug(`list the scorecard with ${JSON.stringify(criteria)}`);
@@ -63,7 +64,8 @@ list.schema = {
   criteria: Joi.object().keys({
     page: Joi.any(), // ignored
     perPage: Joi.any(), // ignored
-    name: Joi.string()
+    name: Joi.string(),
+    legacyScorecardId: Joi.number().integer()
   })
 };
 
@@ -143,7 +145,8 @@ create.schema = {
               .required()
           })
         )
-        .default([])
+        .default([]),
+      legacyScorecardId: Joi.number().integer()
     })
     .required()
 };
@@ -182,7 +185,8 @@ partiallyUpdate.schema = {
             .max(constants.MAX_WEIGHT)
             .required()
         })
-      )
+      ),
+      legacyScorecardId: Joi.number().integer()
     })
     .required()
 };
