@@ -1,10 +1,10 @@
 /**
  * This defines Scorecard model.
  */
-const config = require('config');
-const dynamoose = require('dynamoose');
+const config = require('config')
+const dynamoose = require('dynamoose')
 
-const Schema = dynamoose.Schema;
+const Schema = dynamoose.Schema
 
 const schema = new Schema(
   {
@@ -50,6 +50,6 @@ const schema = new Schema(
     },
     timestamps: true // adds createdAt and updatedAt fields
   }
-);
+)
 
-module.exports = schema;
+module.exports = schema
