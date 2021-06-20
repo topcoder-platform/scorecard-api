@@ -45,8 +45,8 @@ async function list (criteria) {
   if (criteria.name) {
     options.name = { contains: criteria.name }
   }
-  if (criteria.legacyScorecardId) {
-    options.legacyScorecardId = { eq: criteria.legacyScorecardId }
+  if (criteria.legacyId) {
+    options.legacyId = { eq: criteria.legacyId }
   }
 
   logger.debug(`list the scorecard with ${JSON.stringify(criteria)}`)
@@ -65,7 +65,7 @@ list.schema = {
     page: Joi.any(), // ignored
     perPage: Joi.any(), // ignored
     name: Joi.string(),
-    legacyScorecardId: Joi.number().integer()
+    legacyId: Joi.number().integer()
   })
 }
 
@@ -146,7 +146,7 @@ create.schema = {
           })
         )
         .default([]),
-      legacyScorecardId: Joi.number().integer()
+      legacyId: Joi.number().integer()
     })
     .required()
 }
@@ -186,7 +186,7 @@ partiallyUpdate.schema = {
             .required()
         })
       ),
-      legacyScorecardId: Joi.number().integer()
+      legacyId: Joi.number().integer()
     })
     .required()
 }

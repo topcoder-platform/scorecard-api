@@ -104,7 +104,7 @@ describe('E2E tests for scorecards APIs', () => {
         .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
         .query({
           page: null, // ignored
-          legacyScorecardId: 30004192
+          legacyId: 30004192
         })
       should.equal(response.status, 200)
       const result = response.body
@@ -117,7 +117,7 @@ describe('E2E tests for scorecards APIs', () => {
         .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
         .query({
           page: null, // ignored
-          legacyScorecardId: 30004172
+          legacyId: 30004172
         })
       should.equal(response.status, 200)
       const result = response.body

@@ -30,7 +30,7 @@ const schema = new Schema(
       ],
       required: false
     },
-    legacyScorecardId: {
+    legacyId: {
       type: Number,
       required: false
     },
