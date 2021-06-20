@@ -370,6 +370,11 @@ paths:
           description: Filter by name, partial string match is used, case sensitive
           required: false
           type: string
+        - name: legacyId
+          in: query
+          description: Filter by the v3 legacy scorecard id
+          required: false
+          type: number
       responses:
         '200':
           description: OK
@@ -404,6 +409,11 @@ paths:
           description: Filter by name, partial string match is used, case sensitive
           required: false
           type: string
+        - name: legacyId
+          in: query
+          description: Filter by the v3 legacy scorecard id
+          required: false
+          type: number
       responses:
         '200':
           description: OK
@@ -717,6 +727,9 @@ definitions:
           required:
             - scoreSystemId
             - weight
+      legacyId:
+        type: number
+        example: 30004127
   Scorecard:
     type: object
     allOf:

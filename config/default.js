@@ -6,7 +6,7 @@ module.exports = {
   LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
   PORT: process.env.PORT || 3000,
   API_VERSION: process.env.API_VERSION || '/v5',
-  AUTH_SECRET: process.env.AUTH_SECRET || 'UgL4(SEAM*~yc7L~vWrKKN&GHrwyc9N[@nVxm,X?#b4}7:xbzM',
+  AUTH_SECRET: process.env.AUTH_SECRET || 'secret',
   VALID_ISSUERS: process.env.VALID_ISSUERS
     ? process.env.VALID_ISSUERS.replace(/\\"/g, '')
     : '["https://api.topcoder.com","https://api.topcoder-dev.com","https://topcoder-dev.auth0.com/"]',
@@ -26,4 +26,4 @@ module.exports = {
   },
 
   HEALTH_CHECK_TIMEOUT: process.env.HEALTH_CHECK_TIMEOUT || 3000
-};
+}
