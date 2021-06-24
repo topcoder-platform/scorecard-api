@@ -720,8 +720,6 @@ definitions:
             scoreSystemId:
               type: string
               format: UUID
-            scoreSystemName:
-              type: string
             weight:
               type: number
           required:
@@ -735,6 +733,14 @@ definitions:
     allOf:
       - $ref: '#/definitions/AuditEntity'
       - $ref: '#/definitions/ScorecardData'
+      - properties:
+          scorecardDetails:
+            type: array
+            items:
+              type: object
+              properties:
+                scoreSystemName:
+                  type: string
     required:
       - id
       - name
