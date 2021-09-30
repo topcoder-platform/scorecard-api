@@ -1,0 +1,46 @@
+[
+  {
+    "id": "040768a2-a125-46a6-a90d-a6a43cb4d88e",
+    "name": "Submission Phase Opened"
+  },
+  {
+    "id": "a4cb5bae-40fc-40e6-88fc-daa2a75b4ce6",
+    "name": "Submission Uploaded"
+  },
+  {
+    "id": "c32e1335-56fc-42dc-b31d-671506b9ee64",
+    "name": "Submission Phase Closed"
+  },
+  {
+    "id": "142855e4-24b0-4a18-b577-555f1358c1bf",
+    "name": "Review Phase Opened"
+  },
+  {
+    "id": "e3d64417-aeb4-4b11-91ae-d4f50abc9af5",
+    "name": "Review Complete"
+  },
+  {
+    "id": "bc639a81-2247-4dd5-a54c-20935417c660",
+    "name": "Review Phase Closed"
+  },
+  {
+    "id": "cc0ed259-e5b8-46ed-82ed-3877daabb087",
+    "name": "Appeals Phase Opened"
+  },
+  {
+    "id": "71ed787c-e6d9-4584-bbce-47e6d9524166",
+    "name": "Appeal Submitted"
+  },
+  {
+    "id": "014daf42-291a-4c0e-8008-07c1ae03b896",
+    "name": "Appeal Response Submitted"
+  },
+  {
+    "id": "63582d47-0b43-40a5-9501-596f9b944f13",
+    "name": "Appeal Phase Closed"
+  },
+  {
+    "id": "d1d70f54-da42-4a17-a2e4-3c6422154873",
+    "name": "Challenge Close"
+  }
+]

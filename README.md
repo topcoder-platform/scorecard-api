@@ -13,7 +13,9 @@ Configuration for the application is at `config/default.js` and `config/producti
 The following parameters can be set in config files or in env variables:
 
 - LOG_LEVEL: the log level
+- DISABLE_LOGGING: true to disable logging
 - PORT: the server port
+- API_BASE_URL: the API base url
 - API_VERSION: the API version
 - AUTH_SECRET: TC Authentication secret
 - VALID_ISSUERS: valid issuers for TC authentication
@@ -24,20 +26,8 @@ The following parameters can be set in config files or in env variables:
 - AMAZON.DYNAMODB_URL: The local url if using local Amazon DynamoDB
 - AMAZON.DYNAMODB_READ_CAPACITY_UNITS: the AWS DynamoDB read capacity units
 - AMAZON.DYNAMODB_WRITE_CAPACITY_UNITS: the AWS DynamoDB write capacity units
-- AMAZON.DYNAMODB_SCORE_SYSTEM_TABLE: DynamoDB table for score systems
-- AMAZON.DYNAMODB_SCORECARD_TABLE: DynamoDB table for scorecards
-
-Test configuration is at `config/test.js`. You don't need to change them.
-The following test parameters can be set in config file or in env variables:
-
-- ADMIN_TOKEN: admin token
-- COPILOT_TOKEN: copilot token
-- USER_TOKEN: user token
-- EXPIRED_TOKEN: expired token
-- INVALID_TOKEN: invalid token
-- M2M_FULL_ACCESS_TOKEN: M2M full access token
-- M2M_READ_ACCESS_TOKEN: M2M read access token
-- M2M_UPDATE_ACCESS_TOKEN: M2M update access token
+- HEALTH_CHECK_TIMEOUT: timeout value in miliseconds, for health endpoint
+- M2M_AUDIT_HANDLE: default handle for m2m audit
 
 ## Local DynamoDB setup (Optional)
 
@@ -70,27 +60,19 @@ in config file or via environment variables. You may create tables using below `
 - Run lint fix `npm run lint:fix`
 - To delete DynamoDB table if needed `npm run delete-tables`
 - To create DynamoDB table if needed `npm run create-tables`
+- To seed lookup data `npm run seed-tables`
 - Start app `npm start`
 - App is running at `http://localhost:3000`
 
-## Running tests
+## Running Postman Tests
 
-DynamoDB tables should be created before running tests.
-
-### Running unit tests
-
-To run unit tests alone: `npm run test`
-
-To run unit tests with coverage report: `npm run test:cov`
-
-### Running integration tests
-
-To run integration tests alone: `npm run e2e`
-
-To run integration tests with coverage report: `npm run e2e:cov`
+- Import Postman collection and environment in the docs folder to Postman
+- Open Runner
+- Put `Topcoder-scorecards-api` Folder inside Runner
+- Check `Save Responses`
+- Start Run
 
 ## Notes
 
 - swagger is at `docs/swagger.yaml`, you may check it using `http://editor.swagger.io/`
-- all JWT tokens provided in tests are created in `https://jwt.io` with secret `mysecret`
-- though the local db setup, db tables management are not required, I still provide them to make review easier
+- all JWT tokens provided in postman tests are created in `https://jwt.io` with secret `mysecret`

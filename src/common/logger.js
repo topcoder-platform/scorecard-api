@@ -7,37 +7,56 @@ const Joi = require('joi')
 const util = require('util')
 const config = require('config')
 const getParams = require('get-parameter-names')
-const { createLogger, format, transports } = require('winston')
+const winston = require('winston')
 
-const logger = createLogger({
-  level: config.LOG_LEVEL,
-  transports: [
-    new transports.Console({
-      format: format.combine(
-        format.colorize(),
-        format.simple()
-      )
-    })
-  ]
+const {
+  combine, timestamp, colorize, printf
+} = winston.format
+
+const basicFormat = printf(info => {
+  const location = `${info.component}${info.context ? ` ${info.context}` : ''}`
+  return `[${info.timestamp}] ${location} ${info.level} : ${info.message}`
+})
+
+const transports = []
+if (!config.DISABLE_LOGGING) {
+  transports.push(new (winston.transports.Console)({ level: config.LOG_LEVEL }))
+}
+
+const logger = winston.createLogger({
+  transports,
+  format: combine(
+    winston.format(info => {
+      info.level = info.level.toUpperCase()
+      return info
+    })(),
+    colorize(),
+    timestamp(),
+    basicFormat
+  )
 })
 
 /**
- * Log error details with signature
- * @param err the error
- * @param signature the signature
+ * Log error details
+ * @param {Object} err the error
+ * @param {Object} context contains extra info about errors
  */
-logger.logFullError = (err, signature) => {
+logger.logFullError = (err, context = {}) => {
   if (!err) {
     return
   }
-  if (signature) {
-    logger.error(`Error happened in ${signature}`)
+  if (err.logged) {
+    return
   }
-  logger.error(util.inspect(err))
-  if (!err.logged) {
-    logger.error(err.stack)
-    err.logged = true
+  const signature = context.signature ? `${context.signature} : ` : ''
+  let errMessage
+  if (err.response && err.response.error) {
+    errMessage = err.response.error.message
+  } else {
+    errMessage = err.message || util.inspect(err).split('\n')[0]
   }
+  logger.error({ ..._.pick(context, ['component', 'context']), message: `${signature}${errMessage}` })
+  err.logged = true
 }
 
 /**
@@ -76,28 +95,36 @@ const _combineObject = (params, arr) => {
 /**
  * Decorate all functions of a service and log debug information if DEBUG is enabled
  * @param {Object} service the service
+ * @param {String} serviceName the service name
  */
-logger.decorateWithLogging = (service) => {
+logger.decorateWithLogging = (service, serviceName) => {
   if (config.LOG_LEVEL !== 'debug') {
     return
   }
   _.each(service, (method, name) => {
     const params = method.params || getParams(method)
     service[name] = async function () {
-      logger.debug(`ENTER ${name}`)
-      logger.debug('input arguments')
       const args = Array.prototype.slice.call(arguments)
-      logger.debug(util.inspect(_sanitizeObject(_combineObject(params, args))))
+      logger.debug({
+        component: serviceName,
+        context: name,
+        message: `input arguments: ${util.inspect(_sanitizeObject(_combineObject(params, args)), { compact: true, breakLength: Infinity })}`
+      })
       try {
         const result = await method.apply(this, arguments)
-        logger.debug(`EXIT ${name}`)
-        logger.debug('output arguments')
-        if (result !== null && result !== undefined) {
-          logger.debug(util.inspect(_sanitizeObject(result)))
-        }
+        logger.debug({
+          component: serviceName,
+          context: name,
+          message: `output arguments: ${result !== null && result !== undefined
+            ? util.inspect(_sanitizeObject(result), { compact: true, breakLength: Infinity, depth: null })
+            : undefined}`
+        })
         return result
       } catch (e) {
-        logger.logFullError(e, name)
+        logger.logFullError(e, {
+          component: serviceName,
+          context: name
+        })
         throw e
       }
     }
@@ -137,10 +164,11 @@ logger.decorateWithValidators = function (service) {
 /**
  * Apply logger and validation decorators
  * @param {Object} service the service to wrap
+ * @param {String} serviceName the service name
  */
-logger.buildService = (service) => {
+logger.buildService = (service, serviceName) => {
   logger.decorateWithValidators(service)
-  logger.decorateWithLogging(service)
+  logger.decorateWithLogging(service, serviceName)
 }
 
 module.exports = logger

@@ -1,26 +1,41 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   version: 1.0.0
-  title: TopCoder Scorecard API v5
+  title: Scorecard V1 API
   description: >
+    ## Pagination
+
+    - Requests that return multiple items will be paginated to 20 items by
+    default.
+
+    - You can specify further pages with the `page` parameter.
+
+    - You can also set a custom page size up to 100 with the `perPage`
+    parameter.
+
+    - Pagination response data is included in http headers.
+
+    - By default, the response header contains links with `next`, `last`,
+    `first`, `prev` resource links.
+
+
     ## Access levels
 
-    - Admin can call any API, Non-admin can call only retrieval APIs
+    - M2M token is supported, all non-public-accessed endpoint can be accessed
+    using M2M token with proper scopes.
 
-    - M2M token with scope 'read:score_system' can call retrieval score system APIs
+    - Only admins and copilots can create/update an entity.
 
-    - M2M token with scope 'update:score_system' can call mutating score system APIs
+    - It will be considered as admin user if using valid M2M token(having read
+    challenge scope) to list review process/scorecards or retrieve review process/scorecards by id
 
-    - M2M token with scope 'all:score_system' can call any score system API
+    - The weight of corresponding items (Steps in Events), Scorecard Groups, Scorecard Sections,
+    Scorecard Questions should all be positive integers.  No negative weights are supported.
 
-    - M2M token with scope 'read:scorecard' can call retrieval scorecard APIs
-
-    - M2M token with scope 'update:scorecard' can call mutating scorecard APIs
-
-    - M2M token with scope 'all:scorecard' can call any scorecard API
+    - It is highly recommended that the weights of each item in a grouping will add up to a total of 100.
 
 host: api.topcoder.com
-basePath: /v5
+basePath: /v1
 schemes:
   - http
   - https
@@ -29,723 +44,1042 @@ securityDefinitions:
     type: apiKey
     name: Authorization
     in: header
-produces:
-  - application/json
-consumes:
-  - application/json
-security:
-  - bearer: []
+
 paths:
-  '/scoreSystems':
+  /processes:
     get:
       tags:
-        - Score System
-      description: |
-        List score systems.
+        - Review Processes
+      description: Retrieve the review processes in the system.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: name
+        - $ref: "#/parameters/page"
+        - $ref: "#/parameters/perPage"
+        - name: title
           in: query
-          description: Filter by name, partial string match is used, case insensitive
+          description: Filter by title, partial match
           required: false
           type: string
-        - name: phase
+        - name: track
           in: query
-          description: Filter by phase, partial string match is used, case insensitive
+          description: Filter by process track.
+          required: false
+          type: array
+          items:
+            type: string
+        - name: sortBy
+          in: query
+          description: Sort the results by field.
           required: false
           type: string
-        - name: topic
+          enum: ["title", "createdOn", "createdBy", "track", "type", "status"]
+        - name: sortOrder
           in: query
-          description: Filter by topic, partial string match is used, case insensitive
+          description: Order the results by the asc/desc.
           required: false
           type: string
-        - name: isActive
-          in: query
-          description: Filter by isActive flag
-          required: false
-          type: boolean
+          enum: [asc, desc]
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/ScoreSystem'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+              $ref: "#/definitions/ReviewProcessShort"
+          headers:
+            X-Next-Page:
+              type: integer
+              description: The index of the next page
+            X-Page:
+              type: integer
+              description: The index of the current page (starting at 1)
+            X-Per-Page:
+              type: integer
+              description: The number of items to list per page
+            X-Prev-Page:
+              type: integer
+              description: The index of the previous page
+            X-Total:
+              type: integer
+              description: The total number of items
+            X-Total-Pages:
+              type: integer
+              description: The total number of pages
+            Link:
+              type: string
+              description: Pagination link header.
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
-          schema:
-            $ref: '#/definitions/ErrorModel'
-    head:
-      tags:
-        - Score System
-      description: |
-        List score systems head.
-      parameters:
-        - name: name
-          in: query
-          description: Filter by name, partial string match is used, case insensitive
-          required: false
-          type: string
-        - name: phase
-          in: query
-          description: Filter by phase, partial string match is used, case insensitive
-          required: false
-          type: string
-        - name: topic
-          in: query
-          description: Filter by topic, partial string match is used, case insensitive
-          required: false
-          type: string
-        - name: isActive
-          in: query
-          description: Filter by isActive flag
-          required: false
-          type: boolean
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad request.  Request parameters were invalid.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
-          schema:
-            $ref: '#/definitions/ErrorModel'
+            $ref: "#/definitions/ErrorModel"
     post:
       tags:
-        - Score System
-      description: |
-        Create a new score system.
+        - Review Processes
+      description: Create a new Review Process in the system.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
         - in: body
           name: body
           required: true
           schema:
-            $ref: '#/definitions/ScoreSystemData'
+            $ref: "#/definitions/ReviewProcessBodyForCreateAndEdit"
       responses:
-        '201':
+        "201":
           description: Created - The request was successful and the resource is returned.
           schema:
-            $ref: '#/definitions/ScoreSystem'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+            $ref: "#/definitions/ReviewProcess"
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
+            $ref: "#/definitions/ErrorModel"
+        "401":
           description: Unauthorized. Fail to authenticate the requester.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to create the entity
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
-  '/scoreSystems/:id':
+            $ref: "#/definitions/ErrorModel"
+
+  /processes/{processId}:
     get:
       tags:
-        - Score System
-      description: Retrieve the score system by id
+        - Review Processes
+      description: Retrieve the review process with provided id.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: id
+        - name: processId
           in: path
           required: true
           type: string
           format: UUID
-          description: The id of score system to retrieve
+          description: The id of the process to retrieve.
       responses:
-        '200':
+        "200":
           description: OK
           schema:
-            $ref: '#/definitions/ScoreSystem'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+            $ref: "#/definitions/ReviewProcess"
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to view the entity
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "404":
+          description: Entity not found
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
-          schema:
-            $ref: '#/definitions/ErrorModel'
-    head:
-      tags:
-        - Score System
-      description: Retrieve the score system head by id
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: UUID
-          description: The id of score system to retrieve
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad request.  Request parameters were invalid.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
-          schema:
-            $ref: '#/definitions/ErrorModel'
+            $ref: "#/definitions/ErrorModel"
     put:
       tags:
-        - Score System
-      description: Update the score system with the specified id.
+        - Review Processes
+      description: Edit the review process with provided id.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: id
+        - name: processId
           in: path
           required: true
           type: string
           format: UUID
-          description: The id of score system to update
+          description: The id of the process to retrieve.
         - in: body
           name: body
           required: true
           schema:
-            $ref: '#/definitions/ScoreSystemData'
+            $ref: "#/definitions/ReviewProcessBodyForCreateAndEdit"
       responses:
-        '200':
+        "200":
           description: Updated - The request was successful and the resource is returned.
           schema:
-            $ref: '#/definitions/ScoreSystem'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+            $ref: "#/definitions/ReviewProcess"
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
+            $ref: "#/definitions/ErrorModel"
+        "401":
           description: Unauthorized. Fail to authenticate the requester.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to update the entity
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
+            $ref: "#/definitions/ErrorModel"
+        "404":
+          description: Challenge not found
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
+            $ref: "#/definitions/ErrorModel"
     patch:
       tags:
-        - Score System
-      description: >
-        Partially update the score system with specified id.  Only the fields
-        that are provided will be updated.
+        - Review Processes
+      description: |
+        Partially update the review process with provided id.  Only the fields that are
+        provided will be updated.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: id
+        - name: processId
           in: path
           required: true
           type: string
           format: UUID
-          description: The id of score system to update
+          description: The id of the process to retrieve.
         - in: body
           name: body
           required: true
           schema:
-            $ref: '#/definitions/ScoreSystemData'
+            $ref: "#/definitions/ReviewProcessBodyForPartialEdit"
       responses:
-        '200':
+        "200":
           description: Updated - The request was successful and the resource is returned.
           schema:
-            $ref: '#/definitions/ScoreSystem'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+            $ref: "#/definitions/ReviewProcess"
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
+            $ref: "#/definitions/ErrorModel"
+        "401":
           description: Unauthorized. Fail to authenticate the requester.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to update the entity.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
+            $ref: "#/definitions/ErrorModel"
+        "404":
+          description: Challenge not found
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
+            $ref: "#/definitions/ErrorModel"
     delete:
       tags:
-        - Score System
-      description: Delete score system.
+        - Review Processes
+      description: Delete the process with the provided id.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: id
+        - name: processId
           in: path
           required: true
           type: string
           format: UUID
-          description: The id of score system to delete
+          description: The id of the process to delete.
       responses:
-        '204':
-          description: Deleted successful.
-        '400':
-          description: Bad request.  Request parameters were invalid.
+        "200":
+          description: Deleted - The request was successful and the resource is returned.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
+            $ref: "#/definitions/ReviewProcess"
+        "400":
+          description: Bad request. Request parameters were invalid.
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "401":
           description: Unauthorized. Fail to authenticate the requester.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to delete the entity.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
+            $ref: "#/definitions/ErrorModel"
+        "404":
+          description: Challenge not found
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
-  '/scorecards':
+            $ref: "#/definitions/ErrorModel"
+
+  /scorecards:
     get:
       tags:
-        - Scorecard
-      description: |
-        List scorecards.
+        - Scorecards
+      description: Retrieve the scorecards in the system.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: name
+        - $ref: "#/parameters/page"
+        - $ref: "#/parameters/perPage"
+        - name: title
           in: query
-          description: Filter by name, partial string match is used, case sensitive
+          description: Filter by title, partial match
           required: false
           type: string
-        - name: legacyId
+        - name: track
           in: query
-          description: Filter by the v3 legacy scorecard id
+          description: Filter by process track.
           required: false
-          type: number
+          type: array
+          items:
+            type: string
+        - name: sortBy
+          in: query
+          description: Sort the results by field.
+          required: false
+          type: string
+          enum: ["title", "createdOn", "createdBy", "track", "type", "status"]
+        - name: sortOrder
+          in: query
+          description: Order the results by the asc/desc.
+          required: false
+          type: string
+          enum: [asc, desc]
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/Scorecard'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+              $ref: "#/definitions/ScorecardShort"
+          headers:
+            X-Next-Page:
+              type: integer
+              description: The index of the next page
+            X-Page:
+              type: integer
+              description: The index of the current page (starting at 1)
+            X-Per-Page:
+              type: integer
+              description: The number of items to list per page
+            X-Prev-Page:
+              type: integer
+              description: The index of the previous page
+            X-Total:
+              type: integer
+              description: The total number of items
+            X-Total-Pages:
+              type: integer
+              description: The total number of pages
+            Link:
+              type: string
+              description: Pagination link header.
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
-          schema:
-            $ref: '#/definitions/ErrorModel'
-    head:
-      tags:
-        - Scorecard
-      description: |
-        List scorecards head.
-      parameters:
-        - name: name
-          in: query
-          description: Filter by name, partial string match is used, case sensitive
-          required: false
-          type: string
-        - name: legacyId
-          in: query
-          description: Filter by the v3 legacy scorecard id
-          required: false
-          type: number
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad request.  Request parameters were invalid.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
-          schema:
-            $ref: '#/definitions/ErrorModel'
+            $ref: "#/definitions/ErrorModel"
     post:
       tags:
-        - Scorecard
-      description: |
-        Create a new scorecard.
+        - Scorecards
+      description: Create a new scorecard in the system.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
         - in: body
           name: body
           required: true
           schema:
-            $ref: '#/definitions/ScorecardData'
+            $ref: "#/definitions/ScorecardBodyForCreateAndEdit"
       responses:
-        '201':
+        "201":
           description: Created - The request was successful and the resource is returned.
           schema:
-            $ref: '#/definitions/Scorecard'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+            $ref: "#/definitions/Scorecard"
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
+            $ref: "#/definitions/ErrorModel"
+        "401":
           description: Unauthorized. Fail to authenticate the requester.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to create the entity
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
-  '/scorecards/:id':
+            $ref: "#/definitions/ErrorModel"
+
+  /scorecards/{scorecardId}:
     get:
       tags:
-        - Scorecard
-      description: Retrieve the scorecard by id
+        - Scorecards
+      description: Retrieve the scorecard with provided id.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: id
+        - name: scorecardId
           in: path
           required: true
           type: string
           format: UUID
-          description: The id of scorecard to retrieve
+          description: The id of the scorecard to retrieve.
       responses:
-        '200':
+        "200":
           description: OK
           schema:
-            $ref: '#/definitions/Scorecard'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+            $ref: "#/definitions/Scorecard"
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to view the entity
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "404":
+          description: Entity not found
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
-          schema:
-            $ref: '#/definitions/ErrorModel'
-    head:
-      tags:
-        - Scorecard
-      description: Retrieve the scorecard head by id
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: UUID
-          description: The id of scorecard to retrieve
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad request.  Request parameters were invalid.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
-          schema:
-            $ref: '#/definitions/ErrorModel'
+            $ref: "#/definitions/ErrorModel"
     put:
       tags:
-        - Scorecard
-      description: Update the scorecard with the specified id.
+        - Scorecards
+      description: Edit the scorecard with provided id.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: id
+        - name: scorecardId
           in: path
           required: true
           type: string
           format: UUID
-          description: The id of scorecard to update
+          description: The id of the scorecard to retrieve.
         - in: body
           name: body
           required: true
           schema:
-            $ref: '#/definitions/ScorecardData'
+            $ref: "#/definitions/ScorecardBodyForCreateAndEdit"
       responses:
-        '200':
+        "200":
           description: Updated - The request was successful and the resource is returned.
           schema:
-            $ref: '#/definitions/Scorecard'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+            $ref: "#/definitions/Scorecard"
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
+            $ref: "#/definitions/ErrorModel"
+        "401":
           description: Unauthorized. Fail to authenticate the requester.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to update the entity
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
+            $ref: "#/definitions/ErrorModel"
+        "404":
+          description: Challenge not found
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
+            $ref: "#/definitions/ErrorModel"
     patch:
       tags:
-        - Scorecard
-      description: >
-        Partially update the scorecard with specified id.  Only the fields
-        that are provided will be updated.
+        - Scorecards
+      description: |
+        Partially update the scorecard  with provided id.  Only the fields that are
+        provided will be updated.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: id
+        - name: scorecardId
           in: path
           required: true
           type: string
           format: UUID
-          description: The id of scorecard to update
+          description: The id of the scorecard to edit.
         - in: body
           name: body
           required: true
           schema:
-            $ref: '#/definitions/ScorecardData'
+            $ref: "#/definitions/ScorecardBodyForPartialEdit"
       responses:
-        '200':
+        "200":
           description: Updated - The request was successful and the resource is returned.
           schema:
-            $ref: '#/definitions/Scorecard'
-        '400':
-          description: Bad request.  Request parameters were invalid.
+            $ref: "#/definitions/Scorecard"
+        "400":
+          description: Bad request. Request parameters were invalid.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
+            $ref: "#/definitions/ErrorModel"
+        "401":
           description: Unauthorized. Fail to authenticate the requester.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to update the entity.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
+            $ref: "#/definitions/ErrorModel"
+        "404":
+          description: Challenge not found
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
+            $ref: "#/definitions/ErrorModel"
     delete:
       tags:
-        - Scorecard
-      description: Delete scorecard.
+        - Scorecards
+      description: Delete the process with the provided id.
+      security:
+        - bearer: []
+      produces:
+        - application/json
       parameters:
-        - name: id
+        - name: scorecardId
           in: path
           required: true
           type: string
           format: UUID
-          description: The id of scorecard to delete
+          description: The id of the scorecard to delete.
       responses:
-        '204':
-          description: Deleted successful.
-        '400':
-          description: Bad request.  Request parameters were invalid.
+        "200":
+          description: Deleted - The request was successful and the resource is returned.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
+            $ref: "#/definitions/ReviewProcess"
+        "400":
+          description: Bad request. Request parameters were invalid.
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "401":
           description: Unauthorized. Fail to authenticate the requester.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to delete the entity.
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '404':
-          description: entity not found
+            $ref: "#/definitions/ErrorModel"
+        "404":
+          description: Challenge not found
           schema:
-            $ref: '#/definitions/ErrorModel'
-        '500':
-          description: Server error
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorModel'
+            $ref: "#/definitions/ErrorModel"
+
+  /processEventTypes:
+    get:
+      tags:
+        - Lookups
+        - Review Processes
+      description: Retrieve the available events types in the system.
+      security:
+        - bearer: []
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ProcessEventType"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/ErrorModel"
+
+  /reviewSteps:
+    get:
+      tags:
+        - Lookups
+        - Review Processes
+      description: Retrieve the available review steps in the system.
+      security:
+        - bearer: []
+      produces:
+        - application/json
+      parameters:
+        - $ref: "#/parameters/page"
+        - $ref: "#/parameters/perPage"
+        - name: name
+          in: query
+          description: Filter by name
+          required: false
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ReviewStep"
+          headers:
+            X-Next-Page:
+              type: integer
+              description: The index of the next page
+            X-Page:
+              type: integer
+              description: The index of the current page (starting at 1)
+            X-Per-Page:
+              type: integer
+              description: The number of items to list per page
+            X-Prev-Page:
+              type: integer
+              description: The index of the previous page
+            X-Total:
+              type: integer
+              description: The total number of items
+            X-Total-Pages:
+              type: integer
+              description: The total number of pages
+            Link:
+              type: string
+              description: Pagination link header.
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/ErrorModel"
+
+  /scorecards/generateExcel:
+    post:
+      tags:
+        - Scorecards
+      description: Generate XLS of the given scorecard for download.
+      security:
+        - bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/ScorecardBodyForCreateAndEdit"
+      responses:
+        "200":
+          description: The generated XLS file.
+          schema:
+            type: file
+        "400":
+          description: Bad request. Request parameters were invalid.
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "401":
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: Forbidden. The requester does not have the correct permission to create the entity
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/ErrorModel"
+
+parameters:
+  page:
+    name: page
+    in: query
+    description: The page number.
+    required: false
+    type: integer
+    minimum: 1
+    default: 1
+  perPage:
+    name: perPage
+    in: query
+    description: The number of items to list per page.
+    required: false
+    type: integer
+    minimum: 1
+    default: 20
+    maximum: 100
+  perPage100:
+    name: perPage
+    in: query
+    description: The number of items to list per page.
+    required: false
+    type: integer
+    minimum: 1
+    default: 100
+    maximum: 100
 
 definitions:
-  AuditEntity:
+  ProcessEventType:
     type: object
+    required:
+      - id
+      - name
     properties:
       id:
         type: string
         format: UUID
-      createdBy:
-        type: string
-      updatedBy:
-        type: string
-      createdAt:
-        type: string
-        format: date-time
-      updatedAt:
-        type: string
-        format: date-time
-    required:
-      - id
-      - createdBy
-      - createdAt
-  ScoreSystemData:
-    type: object
-    properties:
+        description: The event type id.
       name:
         type: string
-      phase:
-        type: string
-      topic:
-        type: string
-      isActive:
-        type: boolean
-        default: false
-  ScoreSystem:
+        description: The event type name.
+        example: "Submission Phase Opened"
+
+  ReviewStep:
     type: object
-    allOf:
-      - $ref: '#/definitions/AuditEntity'
-      - $ref: '#/definitions/ScoreSystemData'
     required:
       - id
       - name
-      - phase
-      - topic
-      - isActive
-      - createdBy
-      - createdAt
-  ScorecardData:
-    type: object
+      - icon
     properties:
+      id:
+        type: string
+        format: UUID
+        description: The review type id.
       name:
         type: string
-      scorecardDetails:
+        description: The review step label.
+        example: "SonarQube"
+      icon:
+        type: string
+        description: A string to indicate the icon to use when displaying this.
+        example: "cube"
+
+  ReviewProcessBodyForPartialEdit:
+    type: object
+    properties:
+      description:
+        type: string
+        description: The review process desription.
+      title:
+        type: string
+        description: The title of the entity.
+      track:
+        type: string
+        description: The track of the entity.
+      type:
+        type: string
+        description: The type of the entity.
+      events:
         type: array
+        description: |
+          The review events for this process.  The ordering in the array
+          indicates the ordering of the events.
         items:
-          type: object
-          properties:
-            scoreSystemId:
-              type: string
-              format: UUID
-            weight:
-              type: number
-          required:
-            - scoreSystemId
-            - weight
-      legacyId:
+          $ref: "#/definitions/ReviewEvent"
+
+  ReviewProcessBodyForCreateAndEdit:
+    type: object
+    required:
+      - title
+      - track
+      - events
+    properties:
+      description:
+        type: string
+        description: The review process desription.
+      title:
+        type: string
+        description: The title of the entity.
+      track:
+        type: string
+        description: The track of the entity.
+      type:
+        type: string
+        description: The type of the entity.
+      events:
+        type: array
+        description: |
+          The review events for this process.  The ordering in the array
+          indicates the ordering of the events.
+        items:
+          $ref: "#/definitions/ReviewEvent"
+
+  ReviewProcess:
+    type: object
+    allOf:
+      - $ref: "#/definitions/ReviewProcessShort"
+      - type: object
+        required:
+          - events
+        properties:
+          description:
+            type: string
+            description: The review process desription.
+          events:
+            type: array
+            description: |
+              The review events for this process.  The ordering in the array
+              indicates the ordering of the events.
+            items:
+              $ref: "#/definitions/ReviewEvent"
+
+  ReviewEvent:
+    type: object
+    required:
+      - eventType
+      - steps
+    properties:
+      eventType:
+        type: string
+        format: UUID
+      steps:
+        type: array
+        description: |
+          The review steps for this event.  The ordering in the array
+          indicates the ordering of the steps.  Total weight value of all
+          the stpes should equal 100.
+        items:
+          $ref: "#/definitions/ReviewSteps"
+
+  ReviewSteps:
+    type: object
+    required:
+      - stepType
+      - weight
+    properties:
+      stepType:
+        type: string
+        format: UUID
+      weight:
         type: number
-        example: 30004127
+
+  ReviewProcessShort:
+    type: object
+    allOf:
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The review process id.
+            format: UUID
+      - $ref: "#/definitions/CommonData"
+    required:
+      - id
+
+  ScorecardBodyForPartialEdit:
+    type: object
+    properties:
+      description:
+        type: string
+        description: The scorecard description.
+      title:
+        type: string
+        description: The title of the entity.
+      track:
+        type: string
+        description: The track of the entity.
+      type:
+        type: string
+        description: The type of the entity.
+      groups:
+        type: array
+        description: |
+          The groups for this scorecard.  The ordering in the array
+          indicates the ordering of the groups.
+        items:
+          $ref: "#/definitions/ScorecardGroup"
+
+  ScorecardBodyForCreateAndEdit:
+    type: object
+    required:
+      - title
+      - track
+      - groups
+    properties:
+      description:
+        type: string
+        description: The scorecard description.
+      title:
+        type: string
+        description: The title of the entity.
+      track:
+        type: string
+        description: The track of the entity.
+      type:
+        type: string
+        description: The type of the entity.
+      groups:
+        type: array
+        description: |
+          The groups for this scorecard.  The ordering in the array
+          indicates the ordering of the groups.
+        items:
+          $ref: "#/definitions/ScorecardGroup"
+
   Scorecard:
     type: object
     allOf:
-      - $ref: '#/definitions/AuditEntity'
-      - $ref: '#/definitions/ScorecardData'
-      - properties:
-          scorecardDetails:
+      - $ref: "#/definitions/ScorecardShort"
+      - type: object
+        required:
+          - groups
+        properties:
+          description:
+            type: string
+            description: The review process description.
+          groups:
             type: array
+            description: |
+              The groups for this scorecard.  The ordering in the array
+              indicates the ordering of the groups.
             items:
-              type: object
-              properties:
-                scoreSystemName:
-                  type: string
+              $ref: "#/definitions/ScorecardGroup"
+
+  ScorecardGroup:
+    type: object
+    required:
+      - name
+      - weight
+      - sections
+    properties:
+      name:
+        type: string
+        description: The name of the group.
+      weight:
+        type: number
+        description: The weight of the group.
+      sections:
+        type: array
+        description: |
+          The sections in this group.  The ordering in the array indicates
+          the ordering of the sections.
+        items:
+          $ref: "#/definitions/ScorecardSection"
+
+  ScorecardSection:
+    type: object
+    required:
+      - name
+      - weight
+      - questions
+    properties:
+      name:
+        type: string
+        description: The name of the section.
+      weight:
+        type: number
+        description: The weight of the section.
+      questions:
+        type: array
+        description: |
+          The questions in this section.  The ordering in the array indicates the ordering
+          of the questions.
+        items:
+          $ref: "#/definitions/ScorecardQuestion"
+
+  ScorecardQuestion:
+    type: object
+    required:
+      - questionText
+      - questionGuidelines
+      - questionType
+      - weight
+      - isUpload
+    properties:
+      questionText:
+        type: string
+        description: The question text.
+      questionGuidelines:
+        type: string
+        description: The guidelines for the question.
+      questionType:
+        type: string
+        enum: ["Scale1-4", "Scale1-9", "YesOrNo"]
+      weight:
+        type: number
+        description: The weight of the question.
+      isUpload:
+        type: boolean
+        description: Whether upload is allowed for this question or not.
+
+  ScorecardShort:
+    type: object
+    allOf:
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The scorecard id.
+            format: UUID
+      - $ref: "#/definitions/CommonData"
     required:
       - id
-      - name
+
+  CommonData:
+    type: object
+    required:
+      - title
+      - track
+      - type
+      - status
+      - createdOn
       - createdBy
-      - createdAt
+      - updatedOn
+      - updatedBy
+    properties:
+      title:
+        type: string
+        description: The title of the entity.
+      track:
+        type: string
+        description: The track of the entity.
+      type:
+        type: string
+        description: The type of the entity.
+      status:
+        type: string
+        description: The type of the entity.
+        enum: ["complete", "pending", "running"]
+      createdOn:
+        type: string
+        format: date-time
+        description: "ISO-8601 formatted date times (YYYY-MM-DDTHH:mm:ss.sssZ)"
+      createdBy:
+        type: string
+        example: topcoder user
+      updatedOn:
+        type: string
+        format: date-time
+        description: "ISO-8601 formatted date times (YYYY-MM-DDTHH:mm:ss.sssZ)"
+      updatedBy:
+        type: string
+        example: topcoder user
+
   ErrorModel:
     type: object
     properties:

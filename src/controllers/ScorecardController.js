@@ -3,25 +3,17 @@
  */
 const HttpStatus = require('http-status-codes')
 const service = require('../services/ScorecardService')
+const helper = require('../common/helper')
 
 /**
- * List scorecards
+ * Search scorecards
  * @param {Object} req the request
  * @param {Object} res the response
  */
-async function list (req, res) {
-  const result = await service.list(req.query)
+async function searchScorecards (req, res) {
+  const result = await service.searchScorecards(req.query)
+  helper.setResHeaders(req, res, result)
   res.send(result)
-}
-
-/**
- * List scorecards head
- * @param {Object} req the request
- * @param {Object} res the response
- */
-async function listHead (req, res) {
-  await service.list(req.query)
-  res.end()
 }
 
 /**
@@ -29,8 +21,8 @@ async function listHead (req, res) {
  * @param {Object} req the request
  * @param {Object} res the response
  */
-async function create (req, res) {
-  const result = await service.create(req.authUser, req.body)
+async function createScorecard (req, res) {
+  const result = await service.createScorecard(req.authUser, req.body)
   res.status(HttpStatus.CREATED).send(result)
 }
 
@@ -39,28 +31,18 @@ async function create (req, res) {
  * @param {Object} req the request
  * @param {Object} res the response
  */
-async function getEntity (req, res) {
-  const result = await service.getEntity(req.params.id)
+async function getScorecard (req, res) {
+  const result = await service.getScorecard(req.params.scorecardId)
   res.send(result)
 }
 
 /**
- * Get scorecard head
+ * Fully Update scorecard
  * @param {Object} req the request
  * @param {Object} res the response
  */
-async function getEntityHead (req, res) {
-  await service.getEntity(req.params.id)
-  res.end()
-}
-
-/**
- * Update scorecard
- * @param {Object} req the request
- * @param {Object} res the response
- */
-async function update (req, res) {
-  const result = await service.update(req.authUser, req.params.id, req.body)
+async function fullyUpdateScorecard (req, res) {
+  const result = await service.fullyUpdateScorecard(req.authUser, req.params.scorecardId, req.body)
   res.send(result)
 }
 
@@ -69,28 +51,26 @@ async function update (req, res) {
  * @param {Object} req the request
  * @param {Object} res the response
  */
-async function partiallyUpdate (req, res) {
-  const result = await service.partiallyUpdate(req.authUser, req.params.id, req.body)
+async function partiallyUpdateScorecard (req, res) {
+  const result = await service.partiallyUpdateScorecard(req.authUser, req.params.scorecardId, req.body)
   res.send(result)
 }
 
 /**
- * Remove scorecard
+ * Delete scorecard
  * @param {Object} req the request
  * @param {Object} res the response
  */
-async function remove (req, res) {
-  await service.remove(req.params.id)
-  res.status(HttpStatus.NO_CONTENT).end()
+async function deleteScorecard (req, res) {
+  const result = await service.deleteScorecard(req.params.scorecardId)
+  res.send(result)
 }
 
 module.exports = {
-  list,
-  listHead,
-  getEntity,
-  getEntityHead,
-  create,
-  update,
-  partiallyUpdate,
-  remove
+  searchScorecards,
+  getScorecard,
+  createScorecard,
+  fullyUpdateScorecard,
+  partiallyUpdateScorecard,
+  deleteScorecard
 }

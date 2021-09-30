@@ -2,7 +2,7 @@
  * Controller for health check endpoint
  */
 const config = require('config')
-const service = require('../services/ScorecardService')
+const { ProcessEventType } = require('../models')
 const errors = require('../common/errors')
 
 let checksRun = 0
@@ -13,13 +13,11 @@ let checksRun = 0
  * @param {Object} res the response
  */
 async function checkHealth (req, res) {
-  // perform a quick database access operation, if there is no error and is quick, then consider it healthy;
-  // there are just a few challenge types, so search challenge types should be efficient operation,
-  // and it just searches a single challenge type, it should be quick operation
+  // perform a quick database access operation, if there is no error and is quick, then consider it healthy.
   checksRun += 1
   const timestampMS = new Date().getTime()
   try {
-    await service.list({ name: 'default_scorecard' })
+    await ProcessEventType.scan().limit(1)
   } catch (e) {
     throw new errors.ServiceUnavailableError(`There is database operation error, ${e.message}`)
   }

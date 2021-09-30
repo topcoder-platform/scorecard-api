@@ -10,38 +10,6 @@ const routes = require('./src/routes')
 const authenticator = require('tc-core-library-js').middleware.jwtAuthenticator
 
 /**
- * Checks if the source matches the term.
- *
- * @param {Array} source the array in which to search for the term
- * @param {Array | String} term the term to search
- */
-function checkIfExists (source, term) {
-  let terms
-
-  if (!_.isArray(source)) {
-    throw new Error('Source argument should be an array')
-  }
-
-  source = source.map(s => s.toLowerCase())
-
-  if (_.isString(term)) {
-    terms = term.split(' ')
-  } else if (_.isArray(term)) {
-    terms = term.map(t => t.toLowerCase())
-  } else {
-    throw new Error('Term argument should be either a string or an array')
-  }
-
-  for (let i = 0; i < terms.length; i++) {
-    if (source.includes(terms[i])) {
-      return true
-    }
-  }
-
-  return false
-}
-
-/**
  * Configure all routes for express app
  * @param app the express app
  */
@@ -50,7 +18,7 @@ module.exports = app => {
   _.each(routes, (verbs, path) => {
     _.each(verbs, (def, verb) => {
       const controllerPath = `./src/controllers/${def.controller}`
-      const method = require(controllerPath)[def.method]; // eslint-disable-line
+      const method = require(controllerPath)[def.method]
       if (!method) {
         throw new Error(`${def.method} is undefined`)
       }
@@ -71,18 +39,18 @@ module.exports = app => {
           if (!req.authUser) {
             return next(new errors.UnauthorizedError('Action is not allowed for invalid token'))
           }
-
-          if (req.authUser.scopes) {
+          if (req.authUser.isMachine) {
             // M2M
-            if (def.scopes && !checkIfExists(def.scopes, req.authUser.scopes)) {
+            if (def.scopes && !helper.checkIfExists(def.scopes, req.authUser.scopes)) {
               res.forbidden = true
               next(new errors.ForbiddenError('You are not allowed to perform this action!'))
             } else {
+              req.authUser.handle = config.M2M_AUDIT_HANDLE
               next()
             }
           } else if (req.authUser.roles) {
             // user
-            if (def.access && !checkIfExists(def.access, req.authUser.roles)) {
+            if (def.access && !helper.checkIfExists(_.map(def.access, a => a.toLowerCase()), _.map(req.authUser.roles, r => r.toLowerCase()))) {
               res.forbidden = true
               next(new errors.ForbiddenError('You are not allowed to perform this action!'))
             } else {
