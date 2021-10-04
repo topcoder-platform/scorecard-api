@@ -7,131 +7,126 @@
 const constants = require('../app-constants')
 
 module.exports = {
-  '/scoreSystems': {
+  '/health': {
     get: {
-      controller: 'ScoreSystemController',
-      method: 'list',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadScoreSystem, constants.Scopes.AllScoreSystem]
-    },
-    head: {
-      controller: 'ScoreSystemController',
-      method: 'listHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadScoreSystem, constants.Scopes.AllScoreSystem]
-    },
-    post: {
-      controller: 'ScoreSystemController',
-      method: 'create',
-      auth: 'jwt',
-      access: [constants.UserRoles.Admin],
-      scopes: [constants.Scopes.UpdateScoreSystem, constants.Scopes.AllScoreSystem]
+      controller: 'HealthController',
+      method: 'checkHealth'
     }
   },
-  '/scoreSystems/:id': {
+
+  '/processEventTypes': {
     get: {
-      controller: 'ScoreSystemController',
-      method: 'getEntity',
+      controller: 'LookupController',
+      method: 'getProcessEventTypes',
+      auth: 'jwt'
+      // any role is allowed
+      // any scope is allowed
+    }
+  },
+
+  '/reviewSteps': {
+    get: {
+      controller: 'LookupController',
+      method: 'getReviewSteps',
+      auth: 'jwt'
+      // any role is allowed
+      // any scope is allowed
+    }
+  },
+
+  '/processes': {
+    get: {
+      controller: 'ReviewProcessController',
+      method: 'searchReviewProcesses',
       auth: 'jwt',
       // any role is allowed
-      scopes: [constants.Scopes.ReadScoreSystem, constants.Scopes.AllScoreSystem]
+      scopes: [constants.Scopes.READ_REVIEW_PROCESS, constants.Scopes.ALL_REVIEW_PROCESS, constants.Scopes.READ_CHALLENGES, constants.Scopes.ALL_CHALLENGES]
     },
-    head: {
-      controller: 'ScoreSystemController',
-      method: 'getEntityHead',
+    post: {
+      controller: 'ReviewProcessController',
+      method: 'createReviewProcess',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin, constants.UserRoles.Copilot],
+      scopes: [constants.Scopes.CREATE_REVIEW_PROCESS, constants.Scopes.ALL_REVIEW_PROCESS]
+    }
+  },
+
+  '/processes/:processId': {
+    get: {
+      controller: 'ReviewProcessController',
+      method: 'getReviewProcess',
       auth: 'jwt',
       // any role is allowed
-      scopes: [constants.Scopes.ReadScoreSystem, constants.Scopes.AllScoreSystem]
+      scopes: [constants.Scopes.READ_REVIEW_PROCESS, constants.Scopes.ALL_REVIEW_PROCESS, constants.Scopes.READ_CHALLENGES, constants.Scopes.ALL_CHALLENGES]
     },
     put: {
-      controller: 'ScoreSystemController',
-      method: 'update',
+      controller: 'ReviewProcessController',
+      method: 'fullyUpdateReviewProcess',
       auth: 'jwt',
-      access: [constants.UserRoles.Admin],
-      scopes: [constants.Scopes.UpdateScoreSystem, constants.Scopes.AllScoreSystem]
+      access: [constants.UserRoles.Admin, constants.UserRoles.Copilot],
+      scopes: [constants.Scopes.UPDATE_REVIEW_PROCESS, constants.Scopes.ALL_REVIEW_PROCESS]
     },
     patch: {
-      controller: 'ScoreSystemController',
-      method: 'partiallyUpdate',
+      controller: 'ReviewProcessController',
+      method: 'partiallyUpdateReviewProcess',
       auth: 'jwt',
-      access: [constants.UserRoles.Admin],
-      scopes: [constants.Scopes.UpdateScoreSystem, constants.Scopes.AllScoreSystem]
+      access: [constants.UserRoles.Admin, constants.UserRoles.Copilot],
+      scopes: [constants.Scopes.UPDATE_REVIEW_PROCESS, constants.Scopes.ALL_REVIEW_PROCESS]
     },
     delete: {
-      controller: 'ScoreSystemController',
-      method: 'remove',
+      controller: 'ReviewProcessController',
+      method: 'deleteReviewProcess',
       auth: 'jwt',
-      access: [constants.UserRoles.Admin],
-      scopes: [constants.Scopes.UpdateScoreSystem, constants.Scopes.AllScoreSystem]
+      access: [constants.UserRoles.Admin, constants.UserRoles.Copilot],
+      scopes: [constants.Scopes.DELETE_REVIEW_PROCESS, constants.Scopes.ALL_REVIEW_PROCESS]
     }
   },
 
   '/scorecards': {
     get: {
       controller: 'ScorecardController',
-      method: 'list',
+      method: 'searchScorecards',
       auth: 'jwt',
       // any role is allowed
-      scopes: [constants.Scopes.ReadScorecard, constants.Scopes.AllScorecard]
-    },
-    head: {
-      controller: 'ScorecardController',
-      method: 'listHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadScorecard, constants.Scopes.AllScorecard]
+      scopes: [constants.Scopes.READ_SCORECARD, constants.Scopes.ALL_SCORECARD, constants.Scopes.READ_CHALLENGES, constants.Scopes.ALL_CHALLENGES]
     },
     post: {
       controller: 'ScorecardController',
-      method: 'create',
+      method: 'createScorecard',
       auth: 'jwt',
-      access: [constants.UserRoles.Admin],
-      scopes: [constants.Scopes.UpdateScorecard, constants.Scopes.AllScorecard]
+      access: [constants.UserRoles.Admin, constants.UserRoles.Copilot],
+      scopes: [constants.Scopes.CREATE_SCORECARD, constants.Scopes.ALL_SCORECARD]
     }
   },
-  '/scorecards/:id': {
+
+  '/scorecards/:scorecardId': {
     get: {
       controller: 'ScorecardController',
-      method: 'getEntity',
+      method: 'getScorecard',
       auth: 'jwt',
       // any role is allowed
-      scopes: [constants.Scopes.ReadScorecard, constants.Scopes.AllScorecard]
-    },
-    head: {
-      controller: 'ScorecardController',
-      method: 'getEntityHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadScorecard, constants.Scopes.AllScorecard]
+      scopes: [constants.Scopes.READ_SCORECARD, constants.Scopes.ALL_SCORECARD, constants.Scopes.READ_CHALLENGES, constants.Scopes.ALL_CHALLENGES]
     },
     put: {
       controller: 'ScorecardController',
-      method: 'update',
+      method: 'fullyUpdateScorecard',
       auth: 'jwt',
-      access: [constants.UserRoles.Admin],
-      scopes: [constants.Scopes.UpdateScorecard, constants.Scopes.AllScorecard]
+      access: [constants.UserRoles.Admin, constants.UserRoles.Copilot],
+      scopes: [constants.Scopes.UPDATE_SCORECARD, constants.Scopes.ALL_SCORECARD]
     },
     patch: {
       controller: 'ScorecardController',
-      method: 'partiallyUpdate',
+      method: 'partiallyUpdateScorecard',
       auth: 'jwt',
-      access: [constants.UserRoles.Admin],
-      scopes: [constants.Scopes.UpdateScorecard, constants.Scopes.AllScorecard]
+      access: [constants.UserRoles.Admin, constants.UserRoles.Copilot],
+      scopes: [constants.Scopes.UPDATE_SCORECARD, constants.Scopes.ALL_SCORECARD]
     },
     delete: {
       controller: 'ScorecardController',
-      method: 'remove',
+      method: 'deleteScorecard',
       auth: 'jwt',
-      access: [constants.UserRoles.Admin],
-      scopes: [constants.Scopes.UpdateScorecard, constants.Scopes.AllScorecard]
-    }
-  },
-  '/health': {
-    get: {
-      controller: 'HealthController',
-      method: 'checkHealth'
+      access: [constants.UserRoles.Admin, constants.UserRoles.Copilot],
+      scopes: [constants.Scopes.DELETE_SCORECARD, constants.Scopes.ALL_SCORECARD]
     }
   }
 }

@@ -2,37 +2,31 @@
  * Create tables in Amazon DynamoDB
  */
 
-require('../app-bootstrap')
-const config = require('config')
+const models = require('../src/models')
 const logger = require('../src/common/logger')
-const helper = require('../src/common/helper')
 
-logger.info('Create DynamoDB tables.')
+logger.info({ component: 'createTables', message: 'Create DynamoDB tables.' })
 
 const createTables = async () => {
-  const names = [config.AMAZON.DYNAMODB_SCORE_SYSTEM_TABLE, config.AMAZON.DYNAMODB_SCORECARD_TABLE]
-  for (const name of names) {
-    logger.info(`Create table: ${name}`)
-    await helper.createTable({
-      TableName: name,
-      KeySchema: [
-        { AttributeName: 'id', KeyType: 'HASH' } // Partition key
-      ],
-      AttributeDefinitions: [
-        { AttributeName: 'id', AttributeType: 'S' } // S -> String
-      ],
-      ProvisionedThroughput: {
-        ReadCapacityUnits: Number(config.AMAZON.DYNAMODB_READ_CAPACITY_UNITS),
-        WriteCapacityUnits: Number(config.AMAZON.DYNAMODB_WRITE_CAPACITY_UNITS)
+  const names = Object.keys(models)
+  for await (const name of names) {
+    logger.info({ component: 'createTables', message: `Create table: ${name}` })
+    try {
+      await models[name].$__.table.create()
+    } catch (e) {
+      if (e.code === 'ResourceInUseException') {
+        logger.warn({ component: 'createTables', message: `table: ${name} already exist` })
+      } else {
+        logger.warn({ component: 'createTables', message: `table: ${name} cannot be created` })
       }
-    })
+    }
   }
 }
 
 createTables().then(() => {
-  logger.info('Done!')
-  process.exit()
+  logger.info({ component: 'createTables', message: 'Done!' })
+  process.exit(0)
 }).catch((e) => {
-  logger.logFullError(e)
-  process.exit()
+  logger.logFullError(e, { component: 'createTables' })
+  process.exit(1)
 })

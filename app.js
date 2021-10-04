@@ -56,9 +56,9 @@ require('./app-routes')(app)
 // The error handler
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  logger.logFullError(err, req.signature || `${req.method} ${req.url}`)
+  logger.logFullError(err, { component: 'app', signature: req.signature || `${req.method}_${req.url}` })
   const errorResponse = {}
-  const status = err.isJoi ? HttpStatus.BAD_REQUEST : (err.httpStatus || HttpStatus.INTERNAL_SERVER_ERROR)
+  const status = err.isJoi ? HttpStatus.BAD_REQUEST : (err.status || err.httpStatus || HttpStatus.INTERNAL_SERVER_ERROR)
 
   if (_.isArray(err.details)) {
     if (err.isJoi) {
@@ -74,7 +74,7 @@ app.use((err, req, res, next) => {
     }
   }
   if (_.isUndefined(errorResponse.message)) {
-    if (err.message && status !== HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (err.message && (err.httpStatus || status !== HttpStatus.INTERNAL_SERVER_ERROR)) {
       errorResponse.message = err.message
     } else {
       errorResponse.message = 'Internal server error'
@@ -85,7 +85,7 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(app.get('port'), () => {
-  logger.info(`Express server listening on port ${app.get('port')}`)
+  logger.info({ component: 'app', message: `Express server listening on port ${app.get('port')}` })
 })
 
 module.exports = app

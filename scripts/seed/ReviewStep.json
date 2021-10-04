@@ -1,0 +1,57 @@
+[
+  {
+    "id": "9fa84207-ed88-40b2-8c01-600f0a5c604e",
+    "name": "SonarQube",
+    "icon": "Icon 1"
+  },
+  {
+    "id": "4c80db37-7136-4716-80f5-c7efa8ed7b40",
+    "name": "Antivirus Scan",
+    "icon": "Icon 2"
+  },
+  {
+    "id": "59dd4e3e-a190-42b8-ab7c-5adb47e14852",
+    "name": "Checkmarx",
+    "icon": "Icon 3"
+  },
+  {
+    "id": "7fa815dd-b126-49f4-8c53-d7f11ca3df07",
+    "name": "Blackduck",
+    "icon": "Icon 4"
+  },
+  {
+    "id": "5a6ac8a8-0c29-42f7-8e19-4ef747390339",
+    "name": "Additional Scan",
+    "icon": "Icon 5"
+  },
+  {
+    "id": "6c6a3f99-c4a9-4096-8ed8-4cc766c022e2",
+    "name": "Manual Review Scorecard",
+    "icon": "Icon 6"
+  },
+  {
+    "id": "1929b816-3752-45cf-9be7-2833a8087f51",
+    "name": "API Test Suite",
+    "icon": "Icon 7"
+  },
+  {
+    "id": "4b98ebd2-f660-486f-874b-5ac256790f86",
+    "name": "Custom Review 1",
+    "icon": "Icon 8"
+  },
+  {
+    "id": "6489d905-3a54-4c12-b87e-39a8a454f974",
+    "name": "Appeal Response Suite",
+    "icon": "Icon 9"
+  },
+  {
+    "id": "8375212b-ea2a-496c-959e-457a7415fe85",
+    "name": "Appeal Phase Closed",
+    "icon": "Icon 10"
+  },
+  {
+    "id": "de42a108-09c9-4f52-bf37-dbf7e218bc5c",
+    "name": "Challenge Close",
+    "icon": "Icon 11"
+  }
+]
