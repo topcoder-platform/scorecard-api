@@ -75,7 +75,7 @@ paths:
           description: Sort the results by field.
           required: false
           type: string
-          enum: ["title", "createdOn", "createdBy", "track", "type", "status"]
+          enum: ["title", "createdAt", "createdBy", "track", "type", "status"]
         - name: sortOrder
           in: query
           description: Order the results by the asc/desc.
@@ -354,7 +354,7 @@ paths:
           description: Sort the results by field.
           required: false
           type: string
-          enum: ["title", "createdOn", "createdBy", "track", "type", "status"]
+          enum: ["title", "createdAt", "createdBy", "track", "type", "status"]
         - name: sortOrder
           in: query
           description: Order the results by the asc/desc.
@@ -794,6 +794,10 @@ definitions:
       type:
         type: string
         description: The type of the entity.
+      status:
+        type: string
+        description: The status of the entity.
+        enum: ["complete", "pending", "running"]
       events:
         type: array
         description: |
@@ -808,6 +812,7 @@ definitions:
       - title
       - track
       - events
+      - status
     properties:
       description:
         type: string
@@ -821,6 +826,10 @@ definitions:
       type:
         type: string
         description: The type of the entity.
+      status:
+        type: string
+        description: The status of the entity.
+        enum: ["complete", "pending", "running"]
       events:
         type: array
         description: |
@@ -906,6 +915,10 @@ definitions:
       type:
         type: string
         description: The type of the entity.
+      status:
+        type: string
+        description: The status of the entity.
+        enum: ["complete", "pending", "running"]
       groups:
         type: array
         description: |
@@ -920,6 +933,7 @@ definitions:
       - title
       - track
       - groups
+      - status
     properties:
       description:
         type: string
@@ -933,6 +947,10 @@ definitions:
       type:
         type: string
         description: The type of the entity.
+      status:
+        type: string
+        description: The status of the entity.
+        enum: ["complete", "pending", "running"]
       groups:
         type: array
         description: |
@@ -1047,9 +1065,9 @@ definitions:
       - track
       - type
       - status
-      - createdOn
+      - createdAt
       - createdBy
-      - updatedOn
+      - updatedAt
       - updatedBy
     properties:
       title:
@@ -1065,14 +1083,14 @@ definitions:
         type: string
         description: The type of the entity.
         enum: ["complete", "pending", "running"]
-      createdOn:
+      createdAt:
         type: string
         format: date-time
         description: "ISO-8601 formatted date times (YYYY-MM-DDTHH:mm:ss.sssZ)"
       createdBy:
         type: string
         example: topcoder user
-      updatedOn:
+      updatedAt:
         type: string
         format: date-time
         description: "ISO-8601 formatted date times (YYYY-MM-DDTHH:mm:ss.sssZ)"

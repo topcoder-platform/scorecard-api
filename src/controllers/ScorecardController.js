@@ -13,7 +13,7 @@ const helper = require('../common/helper')
 async function searchScorecards (req, res) {
   const result = await service.searchScorecards(req.query)
   helper.setResHeaders(req, res, result)
-  res.send(result)
+  res.send(result.result)
 }
 
 /**

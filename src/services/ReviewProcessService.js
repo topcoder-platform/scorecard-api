@@ -7,7 +7,7 @@ const Joi = require('joi')
 const uuid = require('uuid/v4')
 const helper = require('../common/helper')
 const errors = require('../common/errors')
-const { ReviewProcessFields, ReviewProcessInternalFields, ReviewProcessStatus, MAX_WEIGHT, SUM_OF_WEIGHTS } = require('../../app-constants')
+const { ReviewProcessFields, ReviewProcessStatus, MAX_WEIGHT, SUM_OF_WEIGHTS } = require('../../app-constants')
 const { ReviewProcess, ProcessEventType, ReviewStep } = require('../models')
 
 /**
@@ -38,7 +38,7 @@ function validateReviewProcessWeights (reviewProcess) {
  */
 async function ensureReviewProcessNotDuplicated (reviewProcess) {
   let options = {
-    titleToLower: { eq: _.toLower(reviewProcess.title) },
+    title: { eq: reviewProcess.title },
     track: { eq: reviewProcess.track }
   }
   const found = await helper.scanAll(ReviewProcess, options)
@@ -72,7 +72,7 @@ async function searchReviewProcesses (criteria) {
   let options = {}
   // apply title filter
   if (criteria.title) {
-    options.titleToLower = { contains: _.toLower(criteria.title) }
+    options.title = { contains: criteria.title }
   }
 
   // `criteria.track` could be array of track names, or comma separated string of track names
@@ -120,8 +120,7 @@ searchReviewProcesses.schema = {
 async function getReviewProcess (id) {
   // get and validate if review process with the given id exists
   const reviewProcess = await helper.getById(ReviewProcess, 'ReviewProcess', id)
-  // remove internal fields from the result
-  return helper.cleanResult(reviewProcess, [], ReviewProcessInternalFields)
+  return reviewProcess
 }
 
 getReviewProcess.schema = {
@@ -143,13 +142,10 @@ async function createReviewProcess (authUser, reviewProcess) {
   await validateReviewProcessEvents(reviewProcess)
 
   reviewProcess.id = uuid()
-  // set lower title to use in search api.
-  reviewProcess.titleToLower = _.toLower(reviewProcess.title)
   reviewProcess.createdBy = authUser.handle || authUser.sub
   // createdAt is managed by dynamoose
   const created = await helper.create(ReviewProcess, reviewProcess)
-  // exclude internal fields from result
-  return helper.cleanResult(created, [], ReviewProcessInternalFields)
+  return created
 }
 
 createReviewProcess.schema = {
@@ -192,22 +188,17 @@ async function partiallyUpdateReviewProcess (authUser, id, data) {
   }
 
   // if title or track is changed, prevent duplicated record by title and track
-  if ((data.title && _.toLower(reviewProcess.title) !== _.toLower(data.title)) ||
+  if ((data.title && reviewProcess.title !== data.title) ||
     (data.track && reviewProcess.track !== data.track)) {
     await ensureReviewProcessNotDuplicated({
       title: _.defaultTo(data.title, reviewProcess.title),
       track: _.defaultTo(data.track, reviewProcess.track)
     })
   }
-  // set lower title to use in search api.
-  if (data.title) {
-    data.titleToLower = _.toLower(data.title)
-  }
   data.updatedBy = authUser.handle || authUser.sub
   // updatedAt is managed by dynamoose
   const updated = await helper.update(reviewProcess, data)
-  // exclude internal fields from result
-  return helper.cleanResult(updated, [], ReviewProcessInternalFields)
+  return updated
 }
 
 partiallyUpdateReviewProcess.schema = {
@@ -276,8 +267,7 @@ async function deleteReviewProcess (id) {
   // get and validate if review process with the given id exists
   const reviewProcess = await helper.getById(ReviewProcess, 'ReviewProcess', id)
   await helper.remove(reviewProcess)
-  // exclude internal fields from result
-  return helper.cleanResult(reviewProcess, [], ReviewProcessInternalFields)
+  return reviewProcess
 }
 
 deleteReviewProcess.schema = {

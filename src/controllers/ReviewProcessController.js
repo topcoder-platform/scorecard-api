@@ -13,7 +13,7 @@ const helper = require('../common/helper')
 async function searchReviewProcesses (req, res) {
   const result = await service.searchReviewProcesses(req.query)
   helper.setResHeaders(req, res, result)
-  res.send(result)
+  res.send(result.result)
 }
 
 /**

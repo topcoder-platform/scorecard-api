@@ -21,20 +21,11 @@ const Scopes = {
   ALL_CHALLENGES: 'all:challenges'
 }
 
-// ReviewStep fields will be hidden from the result
-const ReviewStepInternalFields = ['nameToLower']
-
 // ReviewProcess fields will be returned in search api
 const ReviewProcessFields = ['id', 'title', 'track', 'type', 'status', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
 
-// ReviewProcess fields will be hidden from the result
-const ReviewProcessInternalFields = ['titleToLower']
-
 // Scorecard fields will be returned in search api
 const ScorecardFields = ['id', 'title', 'track', 'type', 'status', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
-
-// Scorecard fields will be hidden from the result
-const ScorecardInternalFields = ['titleToLower']
 
 // The status names for ReviewProcess
 const ReviewProcessStatus = {
@@ -66,11 +57,8 @@ const MAX_WEIGHT = 100
 module.exports = {
   UserRoles,
   Scopes,
-  ReviewStepInternalFields,
   ReviewProcessFields,
-  ReviewProcessInternalFields,
   ScorecardFields,
-  ScorecardInternalFields,
   ReviewProcessStatus,
   ScorecardStatus,
   ScorecardQuestionTypes,

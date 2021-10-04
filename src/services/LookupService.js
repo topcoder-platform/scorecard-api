@@ -5,7 +5,6 @@
 const _ = require('lodash')
 const Joi = require('joi')
 const helper = require('../common/helper')
-const { ReviewStepInternalFields } = require('../../app-constants')
 const { ProcessEventType, ReviewStep } = require('../models')
 
 /**
@@ -28,14 +27,12 @@ async function getReviewSteps (criteria) {
   let options = {}
   // apply name filter
   if (criteria.name) {
-    options.nameToLower = { contains: _.toLower(criteria.name) }
+    options.name = { contains: criteria.name }
   }
   let records = await helper.scanAll(ReviewStep, options)
   const total = records.length
 
   let result = _.slice(records, (page - 1) * perPage, page * perPage)
-  // remove internal fields from the result
-  result = helper.cleanResult(result, [], ReviewStepInternalFields)
   return { total, page, perPage, result }
 }
 

@@ -1,9 +1,7 @@
 /**
  * The configuration file.
  */
-process.env.IS_LOCAL_DB = 'true'
-process.env.AWS_ACCESS_KEY_ID = 'FAKE_ACCESS_KEY'
-process.env.AWS_SECRET_ACCESS_KEY = 'FAKE_SECRET_ACCESS_KEY'
+
 module.exports = {
   LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
   DISABLE_LOGGING: process.env.DISABLE_LOGGING ? process.env.DISABLE_LOGGING === 'true' : false,

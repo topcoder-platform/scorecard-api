@@ -7,7 +7,7 @@ const Joi = require('joi')
 const uuid = require('uuid/v4')
 const helper = require('../common/helper')
 const errors = require('../common/errors')
-const { ScorecardFields, ScorecardInternalFields, ScorecardStatus, MAX_WEIGHT, SUM_OF_WEIGHTS } = require('../../app-constants')
+const { ScorecardFields, ScorecardStatus, ScorecardQuestionTypes, MAX_WEIGHT, SUM_OF_WEIGHTS } = require('../../app-constants')
 const { Scorecard } = require('../models')
 
 /**
@@ -50,7 +50,7 @@ function validateScorecardWeights (scorecad) {
  */
 async function ensureScorecardNotDuplicated (scorecard) {
   let options = {
-    titleToLower: { eq: _.toLower(scorecard.title) },
+    title: { eq: scorecard.title },
     track: { eq: scorecard.track }
   }
   const found = await helper.scanAll(Scorecard, options)
@@ -70,7 +70,7 @@ async function searchScorecards (criteria) {
   let options = {}
   // apply title filter
   if (criteria.title) {
-    options.titleToLower = { contains: _.toLower(criteria.title) }
+    options.title = { contains: criteria.title }
   }
 
   // `criteria.track` could be array of track names, or comma separated string of track names
@@ -118,8 +118,7 @@ searchScorecards.schema = {
 async function getScorecard (id) {
   // get and validate if scorecard with the given id exists
   const scorecard = await helper.getById(Scorecard, 'Scorecard', id)
-  // remove internal fields from the result
-  return helper.cleanResult(scorecard, [], ScorecardInternalFields)
+  return scorecard
 }
 
 getScorecard.schema = {
@@ -139,13 +138,10 @@ async function createScorecard (authUser, scorecard) {
   await ensureScorecardNotDuplicated(scorecard)
 
   scorecard.id = uuid()
-  // set lower title to use in search api.
-  scorecard.titleToLower = _.toLower(scorecard.title)
   scorecard.createdBy = authUser.handle || authUser.sub
   // createdAt is managed by dynamoose
   const created = await helper.create(Scorecard, scorecard)
-  // exclude internal fields from result
-  return helper.cleanResult(created, [], ScorecardInternalFields)
+  return created
 }
 
 createScorecard.schema = {
@@ -168,7 +164,7 @@ createScorecard.schema = {
               Joi.object().keys({
                 questionText: Joi.string().trim().required(),
                 questionGuidelines: Joi.string().trim().required(),
-                questionType: Joi.string().trim().required(),
+                questionType: Joi.string().trim().valid(_.values(ScorecardQuestionTypes)).required(),
                 weight: Joi.number().integer().positive().max(MAX_WEIGHT).required(),
                 isUpload: Joi.boolean().required()
               })
@@ -195,22 +191,17 @@ async function partiallyUpdateScorecard (authUser, id, data) {
     validateScorecardWeights(data)
   }
   // if title or track is changed, prevent duplicated record by title and track
-  if ((data.title && _.toLower(scorecard.title) !== _.toLower(data.title)) ||
+  if ((data.title && scorecard.title !== data.title) ||
     (data.track && scorecard.track !== data.track)) {
     await ensureScorecardNotDuplicated({
       title: _.defaultTo(data.title, scorecard.title),
       track: _.defaultTo(data.track, scorecard.track)
     })
   }
-  // set lower title to use in search api.
-  if (data.title) {
-    data.titleToLower = _.toLower(data.title)
-  }
   data.updatedBy = authUser.handle || authUser.sub
   // updatedAt is managed by dynamoose
   const updated = await helper.update(scorecard, data)
-  // exclude internal fields from result
-  return helper.cleanResult(updated, [], ScorecardInternalFields)
+  return updated
 }
 
 partiallyUpdateScorecard.schema = {
@@ -234,7 +225,7 @@ partiallyUpdateScorecard.schema = {
               Joi.object().keys({
                 questionText: Joi.string().trim().required(),
                 questionGuidelines: Joi.string().trim().required(),
-                questionType: Joi.string().trim().required(),
+                questionType: Joi.string().trim().valid(_.values(ScorecardQuestionTypes)).required(),
                 weight: Joi.number().integer().positive().max(MAX_WEIGHT).required(),
                 isUpload: Joi.boolean().required()
               })
@@ -278,7 +269,7 @@ fullyUpdateScorecard.schema = {
               Joi.object().keys({
                 questionText: Joi.string().trim().required(),
                 questionGuidelines: Joi.string().trim().required(),
-                questionType: Joi.string().trim().required(),
+                questionType: Joi.string().trim().valid(_.values(ScorecardQuestionTypes)).required(),
                 weight: Joi.number().integer().positive().max(MAX_WEIGHT).required(),
                 isUpload: Joi.boolean().required()
               })
@@ -299,8 +290,7 @@ async function deleteScorecard (id) {
   // get and validate if scorecard with the given id exists
   const scorecard = await helper.getById(Scorecard, 'Scorecard', id)
   await helper.remove(scorecard)
-  // exclude internal fields from result
-  return helper.cleanResult(scorecard, [], ScorecardInternalFields)
+  return scorecard
 }
 
 deleteScorecard.schema = {

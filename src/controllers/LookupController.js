@@ -22,7 +22,7 @@ async function getProcessEventTypes (req, res) {
 async function getReviewSteps (req, res) {
   const result = await service.getReviewSteps(req.query)
   helper.setResHeaders(req, res, result)
-  res.send(result)
+  res.send(result.result)
 }
 
 module.exports = {

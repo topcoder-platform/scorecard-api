@@ -19,10 +19,6 @@ const schema = new Schema(
       type: String,
       required: true
     },
-    titleToLower: {
-      type: String,
-      required: true
-    },
     track: {
       type: String,
       required: true
