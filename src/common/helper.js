@@ -5,7 +5,228 @@ const _ = require('lodash')
 const config = require('config')
 const querystring = require('querystring')
 const Confirm = require('prompt-confirm')
+const HttpStatus = require('http-status-codes')
+const elasticsearch = require('@elastic/elasticsearch')
 const errors = require('./errors')
+
+// Elasticsearch client
+let esClient
+
+// The es index property mapping
+const esIndexPropertyMapping = {}
+esIndexPropertyMapping[config.get('ES.ES_INDEX_REVIEW_PROCESS')] = {
+  title: { type: 'keyword', normalizer: 'lowercaseNormalizer' },
+  track: { type: 'keyword' },
+  type: { type: 'keyword' },
+  status: { type: 'keyword' },
+  description: { type: 'keyword' },
+  events: {
+    enabled: false,
+    properties: {
+      eventType: { type: 'keyword' },
+      steps: {
+        properties: {
+          stepType: { type: 'keyword' },
+          weight: { type: 'float' }
+        }
+      }
+    }
+  },
+  createdAt: { type: 'date' },
+  createdBy: { type: 'keyword' },
+  updatedAt: { type: 'date' },
+  updatedBy: { type: 'keyword' }
+}
+esIndexPropertyMapping[config.get('ES.ES_INDEX_SCORECARD')] = {
+  title: { type: 'keyword', normalizer: 'lowercaseNormalizer' },
+  track: { type: 'keyword' },
+  type: { type: 'keyword' },
+  status: { type: 'keyword' },
+  description: { type: 'keyword' },
+  groups: {
+    enabled: false,
+    properties: {
+      name: { type: 'keyword' },
+      weight: { type: 'float' },
+      sections: {
+        properties: {
+          name: { type: 'keyword' },
+          weight: { type: 'float' },
+          questions: {
+            properties: {
+              questionText: { type: 'keyword' },
+              questionGuidelines: { type: 'keyword' },
+              questionType: { type: 'keyword' },
+              weight: { type: 'float' },
+              isUpload: { type: 'boolean' }
+            }
+          }
+        }
+      }
+    }
+  },
+  createdAt: { type: 'date' },
+  createdBy: { type: 'keyword' },
+  updatedAt: { type: 'date' },
+  updatedBy: { type: 'keyword' }
+}
+
+/**
+ * Get ES Client
+ * @return {Object} Elastic Host Client Instance
+ */
+function getESClient () {
+  if (esClient) {
+    return esClient
+  }
+  const host = config.ES.HOST
+  const cloudId = config.ES.ELASTICCLOUD.id
+  if (cloudId) {
+    // Elastic Cloud configuration
+    esClient = new elasticsearch.Client({
+      cloud: {
+        id: cloudId
+      },
+      auth: {
+        username: config.ES.ELASTICCLOUD.username,
+        password: config.ES.ELASTICCLOUD.password
+      }
+    })
+  } else if (/.*amazonaws.*/.test(host)) {
+    esClient = new elasticsearch.Client({
+      apiVersion: config.ES.ES_API_VERSION,
+      node: host,
+      connectionClass: require('http-aws-es')
+    })
+  } else {
+    esClient = new elasticsearch.Client({
+      apiVersion: config.ES.ES_API_VERSION,
+      node: host
+    })
+  }
+  const type = config.get('ES.ES_INDEX_TYPE')
+  // create document or catch conflict error
+  esClient.createExtra = async function (index, id, body) {
+    try {
+      await esClient.create({
+        index,
+        type,
+        id,
+        body,
+        refresh: config.ES.ES_REFRESH
+      })
+    } catch (err) {
+      if (err.statusCode === HttpStatus.CONFLICT) {
+        throw new errors.ConflictError(`${index} with id: ${id} already exists`)
+      }
+      throw err
+    }
+  }
+
+  // update document or catch not found error
+  esClient.updateExtra = async function (index, id, doc) {
+    try {
+      await esClient.update({
+        index,
+        type,
+        id,
+        body: { doc },
+        refresh: config.ES.ES_REFRESH
+      })
+    } catch (err) {
+      if (err.statusCode === HttpStatus.NOT_FOUND) {
+        throw new errors.NotFoundError(`${index} with id: ${id} doesn't exist`)
+      }
+      throw err
+    }
+  }
+
+  // get document or catch not found error
+  esClient.getExtra = async function (index, id) {
+    try {
+      const { body } = await esClient.getSource({ index, type, id })
+      return body
+    } catch (err) {
+      if (err.statusCode === HttpStatus.NOT_FOUND) {
+        throw new errors.NotFoundError(`${index} with id: ${id} doesn't exist`)
+      }
+      throw err
+    }
+  }
+
+  // delete document or catch not found error
+  esClient.deleteExtra = async function (index, id) {
+    try {
+      await esClient.delete({
+        index,
+        type,
+        id,
+        refresh: config.ES.ES_REFRESH
+      })
+    } catch (err) {
+      if (err.statusCode === HttpStatus.NOT_FOUND) {
+        throw new errors.NotFoundError(`${index} with id: ${id} doesn't exist`)
+      }
+      throw err
+    }
+  }
+
+  return esClient
+}
+
+/**
+ * Create index in elasticsearch
+ * @param {Object} index the index name
+ * @param {Object} logger the logger object
+ */
+async function createIndex (index, type, logger) {
+  const esClient = getESClient()
+
+  await esClient.indices.create({ index })
+  await esClient.indices.close({ index })
+  await esClient.indices.putSettings({
+    index: index,
+    body: {
+      settings: {
+        analysis: {
+          normalizer: {
+            lowercaseNormalizer: {
+              filter: ['lowercase']
+            }
+          }
+        }
+      }
+    }
+  })
+  await esClient.indices.open({ index })
+  await esClient.indices.putMapping({
+    index,
+    type,
+    body: {
+      properties: esIndexPropertyMapping[index]
+    }
+  })
+  logger.info({
+    component: 'createIndex',
+    message: `ES Index ${index} creation succeeded!`
+  })
+}
+
+/**
+ * Delete index in elasticsearch
+ * @param {Object} index the index name
+ * @param {Object} logger the logger object
+ * @param {Object} esClient the elasticsearch client (optional, will create if not given)
+ */
+async function deleteIndex (index, logger) {
+  const esClient = getESClient()
+
+  await esClient.indices.delete({ index })
+  logger.info({
+    component: 'deleteIndex',
+    message: `ES Index ${index} deletion succeeded!`
+  })
+}
 
 /**
  * Checks if the source matches the term.
@@ -207,8 +428,8 @@ async function scanAll (model, scanParams) {
 }
 
 /**
- * Includes or excludes the given properties from the Dynamo database item
- * @param {Object|Array<Object>} result the query result
+ * Includes or excludes the given properties from the object
+ * @param {Object|Array<Object>} result the object
  * @param {Array<string>} include fields to be included
  * @param {Array<string>} exclude fields to be excluded
  * @returns {Object|Array<Object>} the cleaned result
@@ -220,14 +441,14 @@ function cleanResult (result, include, exclude) {
     return result
   } else if (_.isArray(result)) {
     if (!_.isEmpty(include)) {
-      return _.map(result, r => _.pick(r.originalItem(), include))
+      return _.map(result, r => _.pick(r, include))
     }
-    return _.map(result, r => _.omit(r.originalItem(), exclude))
+    return _.map(result, r => _.omit(r, exclude))
   } else if (_.isObject(result)) {
     if (!_.isEmpty(include)) {
-      return _.pick(result.originalItem(), include)
+      return _.pick(result, include)
     }
-    return _.omit(result.originalItem(), exclude)
+    return _.omit(result, exclude)
   } else return result
 }
 
@@ -251,6 +472,9 @@ async function promptUser (promptQuery, cb) {
 }
 
 module.exports = {
+  getESClient,
+  createIndex,
+  deleteIndex,
   checkIfExists,
   wrapExpress,
   autoWrapExpress,

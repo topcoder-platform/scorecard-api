@@ -17,7 +17,7 @@ const deleteTables = async () => {
       if (e.code === 'ResourceNotFoundException') {
         logger.warn({ component: 'deleteTables', message: `table: ${name} does not exist` })
       } else {
-        logger.warn({ component: 'deleteTables', message: `table: ${name} cannot be deleted` })
+        logger.error({ component: 'deleteTables', message: `table: ${name} cannot be deleted` })
       }
     }
   }

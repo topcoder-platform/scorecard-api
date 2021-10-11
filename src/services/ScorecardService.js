@@ -5,10 +5,15 @@
 const _ = require('lodash')
 const Joi = require('joi')
 const uuid = require('uuid/v4')
+const config = require('config')
 const helper = require('../common/helper')
 const errors = require('../common/errors')
 const { ScorecardFields, ScorecardStatus, ScorecardQuestionTypes, MAX_WEIGHT, SUM_OF_WEIGHTS } = require('../../app-constants')
 const { Scorecard } = require('../models')
+
+const esClient = helper.getESClient()
+const index = config.ES.ES_INDEX_SCORECARD
+const type = config.ES.ES_INDEX_TYPE
 
 /**
  * Validate scorecard weights. Sum of weights should be equal to constants.SUM_OF_WEIGHTS.
@@ -67,10 +72,31 @@ async function ensureScorecardNotDuplicated (scorecard) {
 async function searchScorecards (criteria) {
   const page = criteria.page
   const perPage = criteria.perPage
-  let options = {}
+  if (!criteria.sortBy) {
+    criteria.sortBy = '_id'
+  }
+  const esQuery = {
+    index,
+    type,
+    body: {
+      query: {
+        bool: {
+          must: [],
+          filter: []
+        }
+      },
+      from: (page - 1) * perPage,
+      size: perPage,
+      sort: [{ [criteria.sortBy]: { order: criteria.sortOrder } }]
+    }
+  }
   // apply title filter
   if (criteria.title) {
-    options.title = { contains: criteria.title }
+    esQuery.body.query.bool.must.push({
+      wildcard: {
+        title: `*${criteria.title}*`
+      }
+    })
   }
 
   // `criteria.track` could be array of track names, or comma separated string of track names
@@ -81,19 +107,22 @@ async function searchScorecards (criteria) {
   }
   // apply track filter
   if (criteria.track) {
-    options.track = { in: criteria.track }
+    esQuery.body.query.bool.filter.push({
+      terms: {
+        track: criteria.track
+      }
+    })
   }
-  let records = await helper.scanAll(Scorecard, options)
-  const total = records.length
-  if (!criteria.sortBy) {
-    criteria.sortBy = 'id'
-  }
-  // sort records
-  records = _.orderBy(records, [criteria.sortBy], [criteria.sortOrder])
-  let result = _.slice(records, (page - 1) * perPage, page * perPage)
+  const { body } = await esClient.search(esQuery)
+  let result = _.map(body.hits.hits, '_source')
   // pick desired fields from the result
   result = helper.cleanResult(result, ScorecardFields)
-  return { total, page, perPage, result }
+  return {
+    total: body.hits.total,
+    page,
+    perPage,
+    result
+  }
 }
 
 searchScorecards.schema = {
@@ -117,7 +146,7 @@ searchScorecards.schema = {
  */
 async function getScorecard (id) {
   // get and validate if scorecard with the given id exists
-  const scorecard = await helper.getById(Scorecard, 'Scorecard', id)
+  const scorecard = await esClient.getExtra(index, id)
   return scorecard
 }
 
@@ -141,6 +170,12 @@ async function createScorecard (authUser, scorecard) {
   scorecard.createdBy = authUser.handle || authUser.sub
   // createdAt is managed by dynamoose
   const created = await helper.create(Scorecard, scorecard)
+  try {
+    await esClient.createExtra(index, scorecard.id, created)
+  } catch (err) {
+    await helper.remove(created)
+    throw err
+  }
   return created
 }
 
@@ -186,6 +221,7 @@ createScorecard.schema = {
 async function partiallyUpdateScorecard (authUser, id, data) {
   // get and validate if scorecard with the given id exists
   const scorecard = await helper.getById(Scorecard, 'Scorecard', id)
+  const oldData = scorecard.originalItem()
   // if groups field is provided, make sure weights of each item in a grouping will add up to a total of SUM_OF_WEIGHTS.
   if (data.groups) {
     validateScorecardWeights(data)
@@ -201,6 +237,12 @@ async function partiallyUpdateScorecard (authUser, id, data) {
   data.updatedBy = authUser.handle || authUser.sub
   // updatedAt is managed by dynamoose
   const updated = await helper.update(scorecard, data)
+  try {
+    await esClient.updateExtra(index, scorecard.id, updated)
+  } catch (err) {
+    await helper.update(updated, oldData)
+    throw err
+  }
   return updated
 }
 
@@ -290,6 +332,12 @@ async function deleteScorecard (id) {
   // get and validate if scorecard with the given id exists
   const scorecard = await helper.getById(Scorecard, 'Scorecard', id)
   await helper.remove(scorecard)
+  try {
+    await esClient.deleteExtra(index, scorecard.id)
+  } catch (err) {
+    await helper.create(Scorecard, scorecard.originalItem())
+    throw err
+  }
   return scorecard
 }
 

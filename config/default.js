@@ -28,6 +28,28 @@ module.exports = {
       : 5
   },
 
+  ES: {
+    // the elasticsearch host
+    HOST: process.env.ES_HOST || 'http://localhost:9200',
+    ES_REFRESH: process.env.ES_REFRESH || 'wait_for',
+    ES_API_VERSION: process.env.ES_API_VERSION || '6.8',
+
+    ELASTICCLOUD: {
+      // The elastic cloud id, if your elasticsearch instance is hosted on elastic cloud. DO NOT provide a value for ES_HOST if you are using this
+      id: process.env.ELASTICCLOUD_ID,
+      // The elastic cloud username for basic authentication. Provide this only if your elasticsearch instance is hosted on elastic cloud
+      username: process.env.ELASTICCLOUD_USERNAME,
+      // The elastic cloud password for basic authentication. Provide this only if your elasticsearch instance is hosted on elastic cloud
+      password: process.env.ELASTICCLOUD_PASSWORD
+    },
+    // the process index
+    ES_INDEX_REVIEW_PROCESS: process.env.ES_INDEX_REVIEW_PROCESS || 'review-process',
+    // the scorecard index
+    ES_INDEX_SCORECARD: process.env.ES_INDEX_SCORECARD || 'scorecard',
+    // ES 6.x accepts only 1 Type per index and it's mandatory to define it
+    ES_INDEX_TYPE: process.env.ES_INDEX_TYPE || 'scorecard-api'
+  },
+
   HEALTH_CHECK_TIMEOUT: process.env.HEALTH_CHECK_TIMEOUT || 3000,
 
   M2M_AUDIT_HANDLE: process.env.M2M_AUDIT_HANDLE || 'tcwebservice'

@@ -5,10 +5,15 @@
 const _ = require('lodash')
 const Joi = require('joi')
 const uuid = require('uuid/v4')
+const config = require('config')
 const helper = require('../common/helper')
 const errors = require('../common/errors')
 const { ReviewProcessFields, ReviewProcessStatus, MAX_WEIGHT, SUM_OF_WEIGHTS } = require('../../app-constants')
 const { ReviewProcess, ProcessEventType, ReviewStep } = require('../models')
+
+const esClient = helper.getESClient()
+const index = config.ES.ES_INDEX_REVIEW_PROCESS
+const type = config.ES.ES_INDEX_TYPE
 
 /**
  * Validate review process weights. Sum of weights should be equal to constants.SUM_OF_WEIGHTS.
@@ -69,10 +74,31 @@ async function validateReviewProcessEvents (reviewProcess) {
 async function searchReviewProcesses (criteria) {
   const page = criteria.page
   const perPage = criteria.perPage
-  let options = {}
+  if (!criteria.sortBy) {
+    criteria.sortBy = '_id'
+  }
+  const esQuery = {
+    index,
+    type,
+    body: {
+      query: {
+        bool: {
+          must: [],
+          filter: []
+        }
+      },
+      from: (page - 1) * perPage,
+      size: perPage,
+      sort: [{ [criteria.sortBy]: { order: criteria.sortOrder } }]
+    }
+  }
   // apply title filter
   if (criteria.title) {
-    options.title = { contains: criteria.title }
+    esQuery.body.query.bool.must.push({
+      wildcard: {
+        title: `*${criteria.title}*`
+      }
+    })
   }
 
   // `criteria.track` could be array of track names, or comma separated string of track names
@@ -83,19 +109,22 @@ async function searchReviewProcesses (criteria) {
   }
   // apply track filter
   if (criteria.track) {
-    options.track = { in: criteria.track }
+    esQuery.body.query.bool.filter.push({
+      terms: {
+        track: criteria.track
+      }
+    })
   }
-  let records = await helper.scanAll(ReviewProcess, options)
-  const total = records.length
-  if (!criteria.sortBy) {
-    criteria.sortBy = 'id'
-  }
-  // sort records
-  records = _.orderBy(records, [criteria.sortBy], [criteria.sortOrder])
-  let result = _.slice(records, (page - 1) * perPage, page * perPage)
+  const { body } = await esClient.search(esQuery)
+  let result = _.map(body.hits.hits, '_source')
   // pick desired fields from the result
   result = helper.cleanResult(result, ReviewProcessFields)
-  return { total, page, perPage, result }
+  return {
+    total: body.hits.total,
+    page,
+    perPage,
+    result
+  }
 }
 
 searchReviewProcesses.schema = {
@@ -119,8 +148,8 @@ searchReviewProcesses.schema = {
  */
 async function getReviewProcess (id) {
   // get and validate if review process with the given id exists
-  const reviewProcess = await helper.getById(ReviewProcess, 'ReviewProcess', id)
-  return reviewProcess
+  const process = await esClient.getExtra(index, id)
+  return process
 }
 
 getReviewProcess.schema = {
@@ -145,6 +174,12 @@ async function createReviewProcess (authUser, reviewProcess) {
   reviewProcess.createdBy = authUser.handle || authUser.sub
   // createdAt is managed by dynamoose
   const created = await helper.create(ReviewProcess, reviewProcess)
+  try {
+    await esClient.createExtra(index, reviewProcess.id, created)
+  } catch (err) {
+    await helper.remove(created)
+    throw err
+  }
   return created
 }
 
@@ -180,6 +215,7 @@ createReviewProcess.schema = {
 async function partiallyUpdateReviewProcess (authUser, id, data) {
   // get and validate if review process with the given id exists
   const reviewProcess = await helper.getById(ReviewProcess, 'ReviewProcess', id)
+  const oldData = reviewProcess.originalItem()
   // if events field is provided, make sure weights of each item in a grouping will add up to a total of SUM_OF_WEIGHTS.
   // Make sure given event types and step types exist.
   if (data.events) {
@@ -198,6 +234,12 @@ async function partiallyUpdateReviewProcess (authUser, id, data) {
   data.updatedBy = authUser.handle || authUser.sub
   // updatedAt is managed by dynamoose
   const updated = await helper.update(reviewProcess, data)
+  try {
+    await esClient.updateExtra(index, reviewProcess.id, updated)
+  } catch (err) {
+    await helper.update(updated, oldData)
+    throw err
+  }
   return updated
 }
 
@@ -267,6 +309,12 @@ async function deleteReviewProcess (id) {
   // get and validate if review process with the given id exists
   const reviewProcess = await helper.getById(ReviewProcess, 'ReviewProcess', id)
   await helper.remove(reviewProcess)
+  try {
+    await esClient.deleteExtra(index, reviewProcess.id)
+  } catch (err) {
+    await helper.create(ReviewProcess, reviewProcess.originalItem())
+    throw err
+  }
   return reviewProcess
 }
 

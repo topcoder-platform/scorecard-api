@@ -4,6 +4,7 @@
 
 - NodeJS (v10)
 - AWS DynamoDB
+- Elasticsearch 6.8
 - Java 6+ (used if using runnable jar of local DynamoDB)
 - Docker, Docker Compose (used if using docker of local DynamoDB)
 
@@ -26,10 +27,21 @@ The following parameters can be set in config files or in env variables:
 - AMAZON.DYNAMODB_URL: The local url if using local Amazon DynamoDB
 - AMAZON.DYNAMODB_READ_CAPACITY_UNITS: the AWS DynamoDB read capacity units
 - AMAZON.DYNAMODB_WRITE_CAPACITY_UNITS: the AWS DynamoDB write capacity units
+- ES: Config object for Elasticsearch
+- ES.HOST: Elasticsearch host
+- ES.ES_REFRESH: config to control when changes made by a request are made visible to search
+- ES.ES_API_VERSION: the elasticsearch version
+- ES.ELASTICCLOUD: Config object for elasticcloud
+- <area>ES.ELASTICCLOUD.id</area>: the id
+- ES.ELASTICCLOUD.username: the username
+- ES.ELASTICCLOUD.password: the password
+- ES.ES_INDEX_REVIEW_PROCESS: Elasticsearch index name for review process
+- ES.ES_INDEX_SCORECARD: Elasticsearch index name for scorecard
+- ES.ES_INDEX_TYPE: Elasticsearch index type name
 - HEALTH_CHECK_TIMEOUT: timeout value in miliseconds, for health endpoint
 - M2M_AUDIT_HANDLE: default handle for m2m audit
 
-## Local DynamoDB setup (Optional)
+## Local services setup (Optional)
 
 This page `https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html` provides several ways to deploy local DynamoDB.
 
@@ -42,11 +54,12 @@ If you want to use runnable jar of local DynamoDB:
 - in the extracted folder, run `java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb`
 - local DynamoDB is running at `http://localhost:8000`
 
-If you want to use docker of local DynamoDB:
+If you want to use docker of local DynamoDB and Elasticsearch:
 
 - see `https://hub.docker.com/r/amazon/dynamodb-local` for details
-- you may go to `db-docker` folder, and run `docker-compose up` to start local DynamoDB
+- you may go to `local` folder, and run `docker-compose up` to start local DynamoDB and Elasticsearch
 - local DynamoDB is running at `http://localhost:8000`
+- local Elasticsearch is running at `http://localhost:9200`
 
 ## AWS DynamoDB setup
 
@@ -60,7 +73,10 @@ in config file or via environment variables. You may create tables using below `
 - Run lint fix `npm run lint:fix`
 - To delete DynamoDB table if needed `npm run delete-tables`
 - To create DynamoDB table if needed `npm run create-tables`
-- To seed lookup data `npm run seed-tables`
+- To seed lookup data `npm run seed-tables` Use `-- --force` flag to skip confirmation
+- To create elasticsearch indexes `npm run create-index` Use `-- --force` flag to skip confirmation
+- To delete elasticsearch indexes `npm run delete-index` Use `-- --force` flag to skip confirmation
+- To view elasticsearch data `npm run view-es-data <index>`
 - Start app `npm start`
 - App is running at `http://localhost:3000`
 
@@ -71,6 +87,24 @@ in config file or via environment variables. You may create tables using below `
 - Put `Topcoder-scorecards-api` Folder inside Runner
 - Check `Save Responses`
 - Start Run
+
+## Running Unit Tests
+Configuration for the unit test is at `config/test.js`
+The following parameters can be set in config files or in env variables:
+
+- LOG_LEVEL: the log level
+
+To run unit tests alone
+
+```bash
+npm run test
+```
+
+To run unit tests with coverage report
+
+```bash
+npm run test:cov
+```
 
 ## Notes
 

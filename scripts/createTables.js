@@ -17,7 +17,7 @@ const createTables = async () => {
       if (e.code === 'ResourceInUseException') {
         logger.warn({ component: 'createTables', message: `table: ${name} already exist` })
       } else {
-        logger.warn({ component: 'createTables', message: `table: ${name} cannot be created` })
+        logger.error({ component: 'createTables', message: `table: ${name} cannot be created` })
       }
     }
   }

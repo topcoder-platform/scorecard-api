@@ -3,8 +3,6 @@
  */
 const config = require('config')
 const dynamoose = require('dynamoose')
-const _ = require('lodash')
-const { ReviewProcessStatus } = require('../../app-constants')
 
 const Schema = dynamoose.Schema
 
@@ -29,11 +27,7 @@ const schema = new Schema(
     },
     status: {
       type: String,
-      required: true,
-      validate: (s) => {
-        let validStatuses = _.values(ReviewProcessStatus)
-        return undefined === s || ~validStatuses.indexOf(s)
-      }
+      required: true
     },
     description: {
       type: String,

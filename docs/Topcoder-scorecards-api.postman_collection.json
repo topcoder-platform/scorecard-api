@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "03925123-7342-427c-9f1d-83e3e48bd118",
+		"_postman_id": "f4b6b23e-ce70-4666-abe6-6a5993a6a1fe",
 		"name": "Topcoder-scorecards-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -2424,7 +2424,7 @@
 											"pm.test('Status code is 404', function () {\r",
 											"    pm.response.to.have.status(404);\r",
 											"    const response = pm.response.json()\r",
-											"    pm.expect(response.message).to.eq(\"ReviewProcess with id: 00000000-0000-0000-0000-000000000000 doesn't exist\")\r",
+											"    pm.expect(response.message).to.eq(\"review-process with id: 00000000-0000-0000-0000-000000000000 doesn't exist\")\r",
 											"});"
 										],
 										"type": "text/javascript"
@@ -2483,7 +2483,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{URL}}/processes?title=Top&track=Design,Develop,QA&page=1&perPage=5&sortBy=status&sortOrder=desc",
+									"raw": "{{URL}}/processes?title=top&track=Design,Develop,QA&page=1&perPage=5&sortBy=status&sortOrder=desc",
 									"host": [
 										"{{URL}}"
 									],
@@ -2493,7 +2493,7 @@
 									"query": [
 										{
 											"key": "title",
-											"value": "Top"
+											"value": "top"
 										},
 										{
 											"key": "track",
@@ -7470,7 +7470,7 @@
 											"pm.test('Status code is 404', function () {\r",
 											"    pm.response.to.have.status(404);\r",
 											"    const response = pm.response.json()\r",
-											"    pm.expect(response.message).to.eq(\"Scorecard with id: 00000000-0000-0000-0000-000000000000 doesn't exist\")\r",
+											"    pm.expect(response.message).to.eq(\"scorecard with id: 00000000-0000-0000-0000-000000000000 doesn't exist\")\r",
 											"});"
 										],
 										"type": "text/javascript"

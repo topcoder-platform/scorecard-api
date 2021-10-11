@@ -3,8 +3,6 @@
  */
 const config = require('config')
 const dynamoose = require('dynamoose')
-const _ = require('lodash')
-const { ScorecardStatus, ScorecardQuestionTypes } = require('../../app-constants')
 
 const Schema = dynamoose.Schema
 
@@ -29,11 +27,7 @@ const schema = new Schema(
     },
     status: {
       type: String,
-      required: true,
-      validate: (s) => {
-        let validStatuses = _.values(ScorecardStatus)
-        return undefined === s || ~validStatuses.indexOf(s)
-      }
+      required: true
     },
     description: {
       type: String,
@@ -86,11 +80,7 @@ const schema = new Schema(
                       },
                       questionType: {
                         type: String,
-                        required: true,
-                        validate: (s) => {
-                          let validStatuses = _.values(ScorecardQuestionTypes)
-                          return undefined === s || ~validStatuses.indexOf(s)
-                        }
+                        required: true
                       },
                       weight: {
                         type: Number,
