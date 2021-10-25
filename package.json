@@ -39,7 +39,7 @@
     "lodash": "^4.17.19",
     "tc-core-library-js": "appirio-tech/tc-core-library-js.git#v2.6.7",
     "uuid": "^3.3.2",
-    "winston": "^3.1.0"
+    "winston": "^3.3.3"
   },
   "engines": {
     "node": "10.x"
